@@ -17,6 +17,10 @@ class UploadsController extends Controller
 		$this->directory = $d;
 	}
 
+	protected function getDirectory() {
+		return $this->directory;
+	}
+
 	/**
 	 * @param $f
 	 * @return string
@@ -30,6 +34,13 @@ class UploadsController extends Controller
 		}
 
 		return $fileName;
+	}
+
+	/**
+	 * @return string
+	 */
+	protected function getBase() {
+		return storage_path();
 	}
 
     protected function Upload($f, \Closure $fun, \Closure $error) {

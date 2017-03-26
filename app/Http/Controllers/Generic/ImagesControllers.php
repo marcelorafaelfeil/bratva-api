@@ -103,13 +103,6 @@ class ImagesControllers extends UploadsController
 	}
 
 	/**
-	 * @return string
-	 */
-	private function getBase() {
-		return storage_path();
-	}
-
-	/**
 	 * @param $section
 	 * @param Request $request
 	 * @return mixed
