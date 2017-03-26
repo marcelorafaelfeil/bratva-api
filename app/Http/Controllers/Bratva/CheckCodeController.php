@@ -54,6 +54,16 @@ class CheckCodeController extends UploadsController {
 		return $m;
 	}
 
+	private static function validationCheckCode ($r) {
+		$m = [];
+
+		if(empty($r->code)) {
+			$m['code'] = ['message' => 'O campo código é obrigatório.'];
+		}
+
+		return $m;
+	}
+
 	private function validation ($r, \Closure $success, \Closure $error) {
 		$m = [];
 		$e = new \Exception();
@@ -68,6 +78,9 @@ class CheckCodeController extends UploadsController {
 				break;
 			case 'importCodes':
 				$m = self::validationImportCodes($r);
+				break;
+			case 'checkCode':
+				$m = self::validationCheckCode($r);
 				break;
 		}
 
@@ -139,7 +152,7 @@ class CheckCodeController extends UploadsController {
 
 	public function importCodes (Request $r) {
 		return $this->validation($r, function () use ($r) {
-			$this->setDirectory($this->getBase() . 'codes/');
+			$this->setDirectory($this->getBase() . '/codes/');
 			return $this->Upload($r->file('codes'), function ($name) {
 				$errors = [];
 				$data = [];
@@ -191,6 +204,32 @@ class CheckCodeController extends UploadsController {
 					'messages' => $m
 				]
 			], 400);
+		});
+	}
+
+	public function checkCode (Request $r) {
+		return $this->validation($r, function() use ($r) {
+			if(Codes::has($r->code)) {
+				return \Response::json([
+					'success' => [
+						'message' => 'Produto original.',
+						'valid' => 'true'
+					]
+				]);
+			} else {
+				return \Response::json([
+					'success' => [
+						'message' => 'Este produto não é original.',
+						'valid' => 'false'
+					]
+				]);
+			}
+		}, function($m) {
+			return \Response::json([
+				'errors' => [
+					'messages' => $m
+				]
+			]);
 		});
 	}
 }

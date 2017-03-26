@@ -74,7 +74,7 @@ Route::group(['prefix' => 'web'], function() {
 	Route::delete('menu', 'Website\MenuController@removeMenus');
 	Route::get('menu', 'Website\MenuController@listMenus');
 
-	Route::get('checkcode/check', 'Bratva\CheckCodeController@checkCode');
+	Route::get('checkcode', 'Bratva\CheckCodeController@checkCode');
 });
 
 Route::group(['prefix' => 'upload'], function() {
