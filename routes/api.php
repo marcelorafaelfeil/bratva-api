@@ -34,8 +34,13 @@ Route::group(['prefix' => 'store'], function() {
 	Route::get('categories', 'Store\CategoriesController@listCategories');
 	Route::get('categories/products', 'Store\CategoriesController@listProductsOfCategories');
 
+});
+
+Route::group(['prefix' => 'bratva'], function() {
 	// CheckCode
-	Route::post('checkcode/import', 'Bratva\CheckCodeController@');
+	Route::post('checkcode/import', 'Bratva\CheckCodeController@importCodes');
+	Route::post('checkcode', 'Bratva\CheckCodeController@newCode');
+	Route::delete('checkcode', 'Bratva\CheckCodeController@removeCodes');
 });
 
 Route::group(['prefix' => 'web'], function() {
@@ -68,6 +73,8 @@ Route::group(['prefix' => 'web'], function() {
 	Route::put('menu', 'Website\MenuController@updateMenu');
 	Route::delete('menu', 'Website\MenuController@removeMenus');
 	Route::get('menu', 'Website\MenuController@listMenus');
+
+	Route::get('checkcode/check', 'Bratva\CheckCodeController@checkCode');
 });
 
 Route::group(['prefix' => 'upload'], function() {
