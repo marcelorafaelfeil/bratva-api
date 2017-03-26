@@ -33,6 +33,9 @@ Route::group(['prefix' => 'store'], function() {
 	Route::delete('categories', 'Store\CategoriesController@removeCategories');
 	Route::get('categories', 'Store\CategoriesController@listCategories');
 	Route::get('categories/products', 'Store\CategoriesController@listProductsOfCategories');
+
+	// CheckCode
+	Route::post('checkcode/import', 'Bratva\CheckCodeController@');
 });
 
 Route::group(['prefix' => 'web'], function() {
