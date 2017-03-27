@@ -93,7 +93,7 @@ class Products extends Model {
 	 * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
 	 */
 	public function images () {
-		return $this->belongsToMany('App\Models\Generic\Images', 'products_has_images', 'products_id','images_id');
+		return $this->belongsToMany('App\Models\Generic\Images', 'products_has_images', 'products_id', 'images_id');
 	}
 
 	/**
@@ -186,7 +186,6 @@ class Products extends Model {
 			$p->long_description = $r->long_description;
 			$p->categories_id = $r->category;
 			$p->brands_id = $r->brand;
-
 
 
 			$u = $p->url;
@@ -300,6 +299,8 @@ class Products extends Model {
 				$t_prods . '.id',
 				$t_prods . '.code',
 				$t_prods . '.name',
+				$t_prods . '.status',
+				$t_prods . '.quantity',
 				$t_prods . '.short_description',
 				$t_prods . '.friendly_url_id',
 				$t_prods . '.brands_id'
@@ -316,7 +317,7 @@ class Products extends Model {
 			->get();
 		$data = [];
 		foreach ($products as $p) {
-			if(($hasImage && $p->images()->count() > 0) || !$hasImage) {
+			if (($hasImage && $p->images()->count() > 0) || !$hasImage) {
 				$price = 0.0;
 				$image = "";
 				$url = "";
@@ -352,6 +353,9 @@ class Products extends Model {
 					'id' => $p->id,
 					'code' => $p->code,
 					'name' => $p->name,
+					'quantity' => $p->quantity,
+					'status' => $p->status,
+					'status_text' => self::getStatusText($p->status),
 					'short_description' => $p->short_description,
 					'url' => $url,
 					'price' => $price,
@@ -364,12 +368,12 @@ class Products extends Model {
 		return $data;
 	}
 
-	public static function view($url, \Closure $success, \Closure $error) {
+	public static function view ($url, \Closure $success, \Closure $error) {
 		try {
 			$p = FriendlyUrl::where('url', '=', $url)->first()->product;
 			$p->brand;
 			$p->url;
-			$p->images = $p->images()->orderBy('featured','DESC')->get();
+			$p->images = $p->images()->orderBy('featured', 'DESC')->get();
 
 			$date = new \DateTime();
 			$prices = $p
@@ -418,6 +422,19 @@ class Products extends Model {
 			}
 		} catch (\Exception $e) {
 			throw new \Exception($e->getMessage(), 500, $e);
+		}
+	}
+
+	public static function getStatusText ($s) {
+		switch ($s) {
+			case self::STATUS_TRUE :
+				return 'Ativado';
+				break;
+			case self::STATUS_FALSE :
+				return 'Desativado';
+				break;
+			default :
+				return 'Indefinido';
 		}
 	}
 }
