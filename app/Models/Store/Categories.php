@@ -5,13 +5,12 @@ namespace App\Models\Store;
 use App\Models\Generic\FriendlyUrl;
 use Illuminate\Database\Eloquent\Model;
 
-class Categories extends Model
-{
+class Categories extends Model {
 	const CREATED_AT = 'created_at';
 	const UPDATED_AT = 'updated_at';
 
-	const STATUS_DISABLED = 0;
-	const STATUS_ENABLED = 1;
+	const STATUS_TRUE = 1;
+	const STATUS_FALSE = 0;
 
 	protected $table = 'categories';
 	protected $fillable = [
@@ -21,37 +20,45 @@ class Categories extends Model
 		'friendly_url_id',
 		'safe_delete'
 	];
+	protected $hidden = [
+		'getFather',
+		'safe_delete'
+	];
 
 	/**
 	 * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
 	 */
-	public function products()
-	{
+	public function products () {
 		return $this->belongsToMany('App\Models\Store\Products', 'products_has_categories', 'categories_id', 'products_id');
+	}
+
+	public function getFather () {
+		return $this->hasOne('App\Models\Store\Categories', 'id', 'father');
+	}
+
+	public function childrens() {
+		return $this->hasOne('App\Models\Store\Categories', 'father', 'id');
 	}
 
 	/**
 	 * @description busca os produtos os quais as categorias os definem exatamente
 	 * @return \Illuminate\Database\Eloquent\Relations\HasMany
 	 */
-	public function exactProducts()
-	{
+	public function exactProducts () {
 		return $this->hasMany('App\Models\Store\Products');
 	}
 
 	/**
 	 * @return \Illuminate\Database\Eloquent\Relations\HasOne
 	 */
-	public function url()
-	{
+	public function url () {
 		return $this->hasOne('App\Models\Generic\FriendlyUrl', 'id', 'friendly_url_id');
 	}
 
 	/**
 	 * @return \Illuminate\Database\Eloquent\Builder
 	 */
-	public function newQuery()
-	{
+	public function newQuery () {
 		$query = parent::newQuery();
 		$query->where('safe_delete', '=', 0);
 		return $query;
@@ -61,8 +68,7 @@ class Categories extends Model
 	 * @param $id
 	 * @return bool
 	 */
-	public static function has($id)
-	{
+	public static function has ($id) {
 		$c = Categories::find($id);
 		return !!($c);
 	}
@@ -71,13 +77,12 @@ class Categories extends Model
 	 * @param $u
 	 * @return bool
 	 */
-	public static function hasUrl($u)
-	{
+	public static function hasUrl ($u) {
 		$table = (new FriendlyUrl())->getTable();
-		$c = Categories::whereHas('url', function($query) use ($u, $table) {
-			$query->where($table.'.url', '=', $u);
+		$c = Categories::whereHas('url', function ($query) use ($u, $table) {
+			$query->where($table . '.url', '=', $u);
 		})
-			-> count();
+			->count();
 
 		return ($c > 0);
 	}
@@ -85,13 +90,13 @@ class Categories extends Model
 	/**
 	 * @param $category
 	 */
-	protected static function removeHierarchy($category) {
+	protected static function removeHierarchy ($category) {
 		$cat = Categories::where('father', '=', $category);
 
-		if($cat->count() > 0) {
+		if ($cat->count() > 0) {
 			$categories = $cat->get();
 
-			foreach($categories as $c) {
+			foreach ($categories as $c) {
 				$c->safe_delete = 1;
 				$c->save();
 				self::removeHierarchy($c->id);
@@ -104,36 +109,38 @@ class Categories extends Model
 	 * @param $p
 	 * @return array
 	 */
-	public static function listHierarchy($category, $p) {
-		$data=[];
+	public static function listHierarchy ($category, $p, $count) {
+		$data = [];
 
-		$where=[];
+		$where = [];
 
 		$where[] = ['father', '=', $category];
-		if($p['status']) $where[] = ['status', '=', $p['status']];
+		if ($p['status']) $where[] = ['status', '=', $p['status']];
 
 		$cats = Categories::where($where);
 
-		if($p['limit'] > 0) {
+		if ($p['limit'] > 0) {
 			$cats->take($p['limit']);
 
-			if($p['page'] >= 0) {
+			if ($p['page'] >= 0) {
 				$skip = $p['limit'] * $p['page'];
 				$cats->skip($skip);
 			}
 		}
 
 
-		if($cats->count() > 0) {
-			if($p['order_column'] && $p['order_by']) {
+		if ($cats->count() > 0) {
+			if ($p['order_column'] && $p['order_by']) {
 				$cats->orderBy($p['order_column'], $p['order_by']);
 			}
 
 			$categories = $cats->get();
-			foreach($categories as $c) {
-				$c->childrens=self::listHierarchy($c->id, $p);
+			foreach ($categories as $c) {
+				$count++;
 				$c->url;
-
+				$c->count = $count;
+				$c->status_text = self::getStatusText($c->status);
+				$c->childrens = self::listHierarchy($c->id, $p, $count);
 				array_push($data, $c);
 			}
 		}
@@ -147,7 +154,7 @@ class Categories extends Model
 	 * @param \Closure $error
 	 * @return mixed
 	 */
-	public static function add($r, \Closure $success, \Closure $error) {
+	public static function add ($r, \Closure $success, \Closure $error) {
 		try {
 			$u = FriendlyUrl::create(['url' => $r->url]);
 			$c = Categories::create([
@@ -168,7 +175,7 @@ class Categories extends Model
 	 * @param \Closure $error
 	 * @return mixed
 	 */
-	public static function edit($r, \Closure $success, \Closure $error) {
+	public static function edit ($r, \Closure $success, \Closure $error) {
 		try {
 			$c = Categories::find($r->id);
 			$c->father = $r->father;
@@ -192,11 +199,11 @@ class Categories extends Model
 	 * @param \Closure $error
 	 * @return mixed
 	 */
-	public static function remove($categories, \Closure $success, \Closure $error) {
+	public static function remove ($categories, \Closure $success, \Closure $error) {
 		try {
 			$data = [];
 
-			foreach($categories as $id) {
+			foreach ($categories as $id) {
 				$category = Categories::find($id);
 
 				array_push($data, $category);
@@ -213,18 +220,32 @@ class Categories extends Model
 		}
 	}
 
+	public static function countHierarchy ($c) {
+		$count = 0;
+		if (isset($c) && count($c) > 0) {
+			$count = count($c);
+
+			foreach ($c as $item) {
+				if (count($item->childrens) > 0) {
+					$count = self::countHierarchy($item->childrens) + $count;
+				}
+			}
+		}
+		return $count;
+	}
+
 	/**
 	 * @param $r
 	 * @param \Closure $success
 	 * @param \Closure $error
 	 * @return mixed
 	 */
-	public static function lists($r, \Closure $success, \Closure $error) {
-		try  {
-			$data=[];
+	public static function lists ($r, \Closure $success, \Closure $error) {
+		try {
+			$data = [];
 			$where = [];
 
-			if($r->hierarchy)
+			if ($r->hierarchy)
 				$where[] = ['father', '=', 0];
 
 			$order_column = $r->order_column ? $r->order_column : 'id';
@@ -232,13 +253,14 @@ class Categories extends Model
 			$limit = $r->limit ? $r->limit : null;
 			$page = $r->page ? $r->page : null;
 
-			if($r->status) $where[] = ['status', '=', $r->status];
+			if ($r->status) $where[] = ['status', '=', $r->status];
+			if ($r->father != "") $where[] = ['father', '=', $r->father];
 
 			$Cats = Categories::where($where);
 
-			if($limit > 0) {
+			if ($limit > 0) {
 				$Cats->take($limit);
-				if($page >= 0) {
+				if ($page >= 0) {
 					$skip = $limit * $page;
 					$Cats->skip($skip);
 				}
@@ -248,21 +270,37 @@ class Categories extends Model
 
 			$categories = $Cats->get();
 
-			$params=[
+			$params = [
 				'order_column' => $order_column,
 				'order_by' => $order_by,
 				'limit' => $limit,
 				'page' => $page,
 				'status' => $r->status
 			];
-
-			foreach($categories as $c) {
-				$d=$c;
+			$count = 0;
+			foreach ($categories as $c) {
+				$d = $c;
 				$d->url;
-				if($r->hierarchy)
-					$d->childrens=self::listHierarchy($c->id,$params);
+				$d->count = $count;
+				$d->status_text = self::getStatusText($d->status);
+				$d->total_products = $d->products()->count();
+				$d->total_childrens = $d->childrens()->count();
 
+				if($c->father > 0) {
+					$c->father = $c->getFather;
+				} else {
+					$c->father = "Não tem";
+				}
+				if ($r->hierarchy) {
+					$d->childrens = self::listHierarchy($c->id, $params, $count);
+					$d->count = $count;
+					if (count($d->childrens) > 0) {
+						$count = $count + self::countHierarchy($d->childrens);
+					}
+
+				}
 				array_push($data, $d);
+				$count++;
 			}
 			return $success($data);
 		} catch (\Exception $e) {
@@ -276,9 +314,9 @@ class Categories extends Model
 	 * @param \Closure $error
 	 * @return mixed
 	 */
-	public static function listProducts($r, \Closure $success, \Closure $error) {
+	public static function listProducts ($r, \Closure $success, \Closure $error) {
 		try {
-			if($r->category_id)
+			if ($r->category_id)
 				$category = Categories::find($r->category_id);
 			else {
 				$Category = FriendlyUrl::where('url', '=', $r->category_url)->first()->category();
@@ -293,6 +331,19 @@ class Categories extends Model
 			return $success($data);
 		} catch (\Exception $e) {
 			return $error($e);
+		}
+	}
+
+	public static function getStatusText ($s) {
+		switch ($s) {
+			case self::STATUS_TRUE :
+				return 'Ativado';
+				break;
+			case self::STATUS_FALSE :
+				return 'Desativado';
+				break;
+			default :
+				return 'Indefinido';
 		}
 	}
 }

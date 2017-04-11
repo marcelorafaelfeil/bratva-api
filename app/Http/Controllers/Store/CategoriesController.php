@@ -29,8 +29,8 @@ class CategoriesController extends Controller {
 			if(
 				!is_numeric($r->status) ||
 				(
-					$r->status != Categories::STATUS_DISABLED &&
-					$r->status != Categories::STATUS_ENABLED
+					$r->status != Categories::STATUS_FALSE &&
+					$r->status != Categories::STATUS_TRUE
 				)
 			) {
 				$m['status'] = ['message' => 'O valor atribuído para o campo status, é inválido.'];
@@ -75,8 +75,8 @@ class CategoriesController extends Controller {
 				if (
 					!is_numeric($r->status) ||
 					(
-						$r->status != Categories::STATUS_DISABLED &&
-						$r->status != Categories::STATUS_ENABLED
+						$r->status != Categories::STATUS_FALSE &&
+						$r->status != Categories::STATUS_TRUE
 					)
 				) {
 					$m['status'] = ['message' => 'O valor atribuído para o campo status, é inválido.'];
@@ -150,8 +150,8 @@ class CategoriesController extends Controller {
 			if(
 				!is_numeric($r->status) ||
 				(
-					$r->status != Categories::STATUS_DISABLED ||
-					$r->status != Categories::STATUS_ENABLED
+					$r->status != Categories::STATUS_FALSE ||
+					$r->status != Categories::STATUS_TRUE
 				)
 			) {
 				$m['status'] = ['message' => 'O valor atribuído para o campo status, é inválido.'];
