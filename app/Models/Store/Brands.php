@@ -185,6 +185,7 @@ class Brands extends Model
 				->select([
 					'id',
 					'name',
+					'status',
 					'description',
 					'friendly_url_id'
 				])
@@ -209,7 +210,10 @@ class Brands extends Model
 					'name' => $b->name,
 					'description' => $b->description,
 					'url' => $url,
-					'thumb' => $thumb
+					'thumb' => $thumb,
+					'status' => $b->status,
+					'status_text' => self::getStatusText($b->status),
+					'total_products' => $b->products()->count()
 				];
 			}
 			return $success($data);
@@ -232,6 +236,19 @@ class Brands extends Model
 			return $success($data);
 		} catch (\Exception $e) {
 			return $error($e);
+		}
+	}
+
+	public static function getStatusText ($s) {
+		switch ($s) {
+			case self::STATUS_TRUE :
+				return 'Ativado';
+				break;
+			case self::STATUS_FALSE :
+				return 'Desativado';
+				break;
+			default :
+				return 'Indefinido';
 		}
 	}
 }
