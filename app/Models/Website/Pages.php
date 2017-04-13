@@ -177,8 +177,11 @@ class Pages extends Model {
 				}
 			}
 
-			$Pages->select(['id', 'title', 'short_description', 'long_description', 'created_at']);
+			$Pages->select(['id', 'title', 'short_description', 'status', 'long_description', 'created_at']);
 			$data = $Pages->get();
+			foreach($data as $k => $d) {
+				$data[$k]->status_text = self::getStatusText($d->status);
+			}
 
 			return $success($data);
 		} catch (\Exception $e) {
@@ -216,6 +219,19 @@ class Pages extends Model {
 			return $success($p);
 		} catch (\Exception $e) {
 			return $error($e);
+		}
+	}
+
+	public static function getStatusText ($s) {
+		switch ($s) {
+			case self::STATUS_TRUE :
+				return 'Ativado';
+				break;
+			case self::STATUS_FALSE :
+				return 'Desativado';
+				break;
+			default :
+				return 'Indefinido';
 		}
 	}
 }
