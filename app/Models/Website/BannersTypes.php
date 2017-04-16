@@ -180,4 +180,47 @@ class BannersTypes extends Model {
 			return $error($e);
 		}
 	}
+
+	public static function listBannersByManyTypes ($r, \Closure $success, \Closure $error) {
+		try {
+			$types = BannersTypes::query();
+			$types = $types->whereIn('id', $r->types)->get();
+
+			$data = [];
+
+			foreach($types as $t) {
+				$banners = $t->banners();
+				$dataBanners = Banners::getBanners($banners, $r);
+				foreach(self::mergeBanners($data, $dataBanners) as $b) {
+					array_push($data, $b);
+				}
+			}
+
+			return $success($data);
+		} catch (\Exception $e) {
+			return $error($e);
+		}
+	}
+
+	protected static function mergeBanners($data1, $data2) {
+		$data=[];
+		if(count($data1) > 0 && count($data2) > 0) {
+			foreach ($data2 as $d2) {
+				$diff=true;
+				foreach ($data1 as $d1) {
+					if ($d1->id == $d2->id) {
+						$diff=false;
+					}
+				}
+				if($diff)
+					array_push($data, $d2);
+			}
+		} else {
+			foreach ($data2 as $d2) {
+				array_push($data, $d2);
+			}
+		}
+
+		return $data;
+	}
 }

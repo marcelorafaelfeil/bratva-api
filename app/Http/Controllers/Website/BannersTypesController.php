@@ -83,17 +83,17 @@ class BannersTypesController extends Controller {
 	 * @param $r
 	 * @return array
 	 */
-	protected static function validationUpdateType($r) {
+	protected static function validationUpdateType ($r) {
 		$m = [];
-		if(empty($r->id)) {
+		if (empty($r->id)) {
 			$m['type'] = ['message' => 'É necessário selecionar o tipo de banner que deseja editar.'];
 		} else {
 			$tb = BannersTypes::find($r->id);
-			if(!$tb) {
+			if (!$tb) {
 				$m['type'] = ['message' => 'O tipo de banner selecionado, não existe.'];
 			}
 		}
-		if(count($m) == 0) {
+		if (count($m) == 0) {
 			if (empty($r->title)) {
 				$m['title'] = ['message' => 'O campo título, é obrigatório.'];
 			} else {
@@ -158,8 +158,8 @@ class BannersTypesController extends Controller {
 					}
 				}
 			}
-			if(isset($r->order)) {
-				if(!is_numeric($r->order)) {
+			if (isset($r->order)) {
+				if (!is_numeric($r->order)) {
 					$m['order'] = ['message' => 'O valor atribúido para o campo order, é inválido.'];
 				}
 			}
@@ -172,13 +172,13 @@ class BannersTypesController extends Controller {
 	 * @param $r
 	 * @return array
 	 */
-	protected static function validationRemoveTypes($r) {
+	protected static function validationRemoveTypes ($r) {
 		$m = [];
-		if(count($r->types) == 0) {
+		if (count($r->types) == 0) {
 			$m['type'] = ['message' => 'É necessário selecionar o tipo que deseja apagar.'];
 		} else {
-			foreach($r->types as $t) {
-				if(!BannersTypes::has($t)) {
+			foreach ($r->types as $t) {
+				if (!BannersTypes::has($t)) {
 					$m['type'] = ['message' => 'O tipo "' . $t . '", não foi encontrado.'];
 				}
 			}
@@ -229,16 +229,39 @@ class BannersTypesController extends Controller {
 	 * @param $r
 	 * @return array
 	 */
-	protected static function validationBannersByTypes($r) {
-		if(empty($r->type)) {
+	protected static function validationBannersByTypes ($r) {
+		if (empty($r->type)) {
 			$m['type'] = ['message' => 'É necessário informar o tipo do banner que deseja listar.'];
 		} else {
-			if(!BannersTypes::has($r->type)) {
+			if (!BannersTypes::has($r->type)) {
 				$m['type'] = ['message' => 'O tipo do banner selecionado, não existe.'];
 			} else {
 				$m = BannersController::validationListBanners($r);
 			}
 		}
+		return $m;
+	}
+
+	/**
+	 * @param $r
+	 * @return array
+	 */
+	protected static function validationBannersByManyTypes ($r) {
+		$m=[];
+		if (!isset($r->types) && count($r->type) == 0) {
+			$m['type'] = ['message' => 'É necessário informar o tipo do banner que deseja listar.'];
+		} else {
+			foreach ($r->types as $t) {
+				if (!BannersTypes::has($t)) {
+					$m['type'] = ['message' => 'O tipo de banner "'.$t.'" selecionado, não existe.'];
+				}
+			}
+		}
+
+		if(count($m) == 0) {
+			$m = BannersController::validationListBanners($r);
+		}
+
 		return $m;
 	}
 
@@ -268,6 +291,9 @@ class BannersTypesController extends Controller {
 				break;
 			case 'listBannersByTypes' :
 				$m = self::validationBannersByTypes($r);
+				break;
+			case 'listBannersByManyTypes' :
+				$m = self::validationBannersByManyTypes($r);
 				break;
 		}
 
@@ -318,7 +344,7 @@ class BannersTypesController extends Controller {
 	 */
 	public function updateType (Request $request) {
 		return $this->validation($request, function () use ($request) {
-			return BannersTypes::edit($request, function($data) {
+			return BannersTypes::edit($request, function ($data) {
 				return \Response::json([
 					'success' => [
 						'message' => 'Tipo de banner alterado com sucesso.',
@@ -351,15 +377,15 @@ class BannersTypesController extends Controller {
 	 * @return mixed
 	 */
 	public function removeTypes (Request $request) {
-		return $this->validation($request, function() use ($request) {
-			return BannersTypes::remove($request, function($data) {
+		return $this->validation($request, function () use ($request) {
+			return BannersTypes::remove($request, function ($data) {
 				return \Response::json([
 					'success' => [
 						'message' => 'Tipos de banners apagados com sucesso.',
 						'data' => $data
 					]
 				], 200);
-			}, function($e) {
+			}, function ($e) {
 				return \Response::json([
 					'error' => [
 						'internal' => [
@@ -371,7 +397,7 @@ class BannersTypesController extends Controller {
 					]
 				], 500);
 			});
-		}, function($m) {
+		}, function ($m) {
 			return \Response::json([
 				'errors' => [
 					'messages' => $m
@@ -419,27 +445,60 @@ class BannersTypesController extends Controller {
 	 * @return mixed
 	 */
 	public function listBannersByTypes (Request $request) {
-		return $this->validation($request, function() use ($request) {
-			return BannersTypes::listBanners($request, function($data) {
+		if(isset($request->types)) {
+			return self::listBannersByManyTypes($request);
+		} else {
+			return $this->validation($request, function () use ($request) {
+				return BannersTypes::listBanners($request, function ($data) {
+					return \Response::json([
+						'success' => [
+							'message' => 'Banners retornados com sucesso.',
+							'data' => $data
+						]
+					], 200);
+				}, function ($e) {
+					return \Response::json([
+						'error' => [
+							'internal' => [
+								'message' => $e->getMessage(),
+								'file' => $e->getFile(),
+								'line' => $e->getLine()
+							],
+							'message' => 'Erro interno. Tente novamente mais tarde.'
+						]
+					]);
+				});
+			}, function ($m) {
+				return \Response::json([
+					'errors' => [
+						'messages' => $m
+					]
+				], 400);
+			});
+		}
+	}
+
+	protected function listBannersByManyTypes (Request $request) {
+		return $this->validation($request, function () use ($request) {
+			return BannersTypes::listBannersByManyTypes($request, function ($data) {
 				return \Response::json([
 					'success' => [
-						'message' => 'Banners retornados com sucesso.',
+						'message' => 'Banners retornados com sucess',
 						'data' => $data
 					]
-				], 200);
-			}, function($e) {
+				]);
+			}, function ($e) {
 				return \Response::json([
 					'error' => [
 						'internal' => [
 							'message' => $e->getMessage(),
 							'file' => $e->getFile(),
 							'line' => $e->getLine()
-						],
-						'message' => 'Erro interno. Tente novamente mais tarde.'
+						]
 					]
-				]);
+				], 500);
 			});
-		}, function($m) {
+		}, function ($m) {
 			return \Response::json([
 				'errors' => [
 					'messages' => $m

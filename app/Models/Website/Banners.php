@@ -166,6 +166,11 @@ class Banners extends Model {
 		}
 	}
 
+	/**
+	 * @param $Banners
+	 * @param $r
+	 * @return mixed
+	 */
 	public static function getBanners($Banners, $r) {
 		$order_by = isset($r->orderBy) ? $r->orderBy : 'ASC';
 		$order_column = isset($r->orderColumn) ? $r->orderColumn : 'order';
@@ -204,6 +209,8 @@ class Banners extends Model {
 
 		foreach($banners as $b) {
 			$b->image;
+			$types = $b->types()->get();
+			$b->types = $types;
 			array_push($data, $b);
 		}
 
