@@ -348,7 +348,6 @@ class Products extends Model {
 				if (isset($p->brand->name))
 					$brand = $p->brand;
 
-				//var_dump($p->brand);
 				$data[] = [
 					'id' => $p->id,
 					'code' => $p->code,
@@ -368,6 +367,12 @@ class Products extends Model {
 		return $data;
 	}
 
+	/**
+	 * @param $url
+	 * @param \Closure $success
+	 * @param \Closure $error
+	 * @return mixed
+	 */
 	public static function view ($url, \Closure $success, \Closure $error) {
 		try {
 			$p = FriendlyUrl::where('url', '=', $url)->first()->product;
@@ -425,6 +430,10 @@ class Products extends Model {
 		}
 	}
 
+	/**
+	 * @param $s
+	 * @return string
+	 */
 	public static function getStatusText ($s) {
 		switch ($s) {
 			case self::STATUS_TRUE :

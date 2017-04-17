@@ -174,7 +174,7 @@ class Banners extends Model {
 	public static function getBanners($Banners, $r) {
 		$order_by = isset($r->orderBy) ? $r->orderBy : 'ASC';
 		$order_column = isset($r->orderColumn) ? $r->orderColumn : 'order';
-		$status = isset($r->status) ? $r->status : 1;
+		$status = isset($r->status) ? $r->status : null;
 		$limit = isset($r->limit) ? $r->limit : null;
 		$page = isset($r->page) ? $r->page : null;
 
@@ -190,7 +190,8 @@ class Banners extends Model {
 				['expire', '=', 0],
 			]);
 		} else {
-			$Banners->where('status', '=', $status);
+			if($status)
+				$Banners->where('status', '=', $status);
 		}
 
 		$Banners->orderBy($order_column, $order_by);

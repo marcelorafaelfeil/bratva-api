@@ -75,6 +75,12 @@ Route::group(['prefix' => 'web'], function() {
 	Route::get('menu', 'Website\MenuController@listMenus');
 
 	Route::get('checkcode', 'Bratva\CheckCodeController@checkCode');
+
+	// E-mails
+	Route::post('emails', 'Generic\EmailsController@newEmail');
+	Route::put('emails', 'Generic\EmailsController@updateEmail');
+	Route::delete('emails', 'Generic\EmailsController@removeEmails');
+	Route::get('emails', 'Generic\EmailsController@listEmails');
 });
 
 Route::group(['prefix' => 'upload'], function() {

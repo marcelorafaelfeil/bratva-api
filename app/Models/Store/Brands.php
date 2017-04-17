@@ -196,7 +196,6 @@ class Brands extends Model
 
 			$data = [];
 			foreach($brands as $k => $b) {
-				$url='';
 				$thumb='';
 
 				$images = $b->images()->orderBy('featured', 'DESC');
