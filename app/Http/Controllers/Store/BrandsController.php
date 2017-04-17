@@ -1,4 +1,8 @@
 <?php
+/**
+ * User: Marcelo Rafael <marcelo.rafael.feil@gmail.com>
+ * Date: 16/04/2017
+ */
 
 namespace App\Http\Controllers\Store;
 

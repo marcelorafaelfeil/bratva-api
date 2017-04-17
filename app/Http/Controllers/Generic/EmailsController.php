@@ -8,6 +8,10 @@ use App\Http\Controllers\Controller;
 
 class EmailsController extends Controller {
 
+	/**
+	 * @param $r
+	 * @return array
+	 */
 	private function validateListEmails($r) {
 		$m = [];
 
@@ -44,6 +48,10 @@ class EmailsController extends Controller {
 		return $m;
 	}
 
+	/**
+	 * @param $r
+	 * @return array
+	 */
 	private function validateNewEmail($r) {
 		$m = [];
 
@@ -58,6 +66,10 @@ class EmailsController extends Controller {
 		return $m;
 	}
 
+	/**
+	 * @param $r
+	 * @return array
+	 */
 	private function validateUpdateEmail($r) {
 		$m = [];
 
@@ -84,6 +96,10 @@ class EmailsController extends Controller {
 		return $m;
 	}
 
+	/**
+	 * @param $r
+	 * @return array
+	 */
 	private function validateRemoveEmails($r) {
 		$m = [];
 		if(!isset($r->emails) || count($r->emails) == 0) {
@@ -98,6 +114,12 @@ class EmailsController extends Controller {
 		return $m;
 	}
 
+	/**
+	 * @param $r
+	 * @param \Closure $success
+	 * @param \Closure $error
+	 * @return mixed
+	 */
 	private function validation($r, \Closure $success, \Closure $error) {
 		$m=[];
 
@@ -125,6 +147,10 @@ class EmailsController extends Controller {
 		return $success();
 	}
 
+	/**
+	 * @param Request $request
+	 * @return mixed
+	 */
 	public function listEmails(Request $request) {
 		return $this->validation($request, function() use ($request) {
 			return Emails::lists($request, function($data) {
@@ -155,6 +181,10 @@ class EmailsController extends Controller {
 		});
 	}
 
+	/**
+	 * @param Request $request
+	 * @return mixed
+	 */
 	public function newEmail(Request $request) {
 		return $this->validation($request, function() use ($request) {
 			return Emails::add($request, function($data) {
@@ -185,6 +215,10 @@ class EmailsController extends Controller {
 		});
 	}
 
+	/**
+	 * @param Request $request
+	 * @return mixed
+	 */
 	public function updateEmail(Request $request) {
 		return $this->validation($request, function() use ($request) {
 			return Emails::edit($request, function($data) {
@@ -215,6 +249,10 @@ class EmailsController extends Controller {
 		});
 	}
 
+	/**
+	 * @param Request $request
+	 * @return mixed
+	 */
 	public function removeEmails(Request $request) {
 		return $this->validation($request, function() use ($request) {
 			return Emails::remove($request, function($data) {

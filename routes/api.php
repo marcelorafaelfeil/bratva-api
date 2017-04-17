@@ -81,6 +81,12 @@ Route::group(['prefix' => 'web'], function() {
 	Route::put('emails', 'Generic\EmailsController@updateEmail');
 	Route::delete('emails', 'Generic\EmailsController@removeEmails');
 	Route::get('emails', 'Generic\EmailsController@listEmails');
+
+	// Newsletters
+	Route::post('newsletter', 'Website\NewsletterController@createNewsletter');
+	/*Route::put('newsletter', 'Website\NewsletterController@updateNewsletter');*/
+	Route::delete('newsletter', 'Website\NewsletterController@removeNewsletters');
+	Route::get('newsletter', 'Website\NewsletterController@listNewsletters');
 });
 
 Route::group(['prefix' => 'upload'], function() {

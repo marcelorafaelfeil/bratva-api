@@ -109,6 +109,12 @@ class Emails extends Model {
 		}
 	}
 
+	/**
+	 * @param $r
+	 * @param \Closure $success
+	 * @param \Closure $error
+	 * @return mixed
+	 */
 	public static function lists($r, \Closure $success, \Closure $error) {
 		try {
 			$verified = $r->verified ? $r->verified : null;
