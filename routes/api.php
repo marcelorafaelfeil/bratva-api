@@ -34,6 +34,8 @@ Route::group(['prefix' => 'store'], function() {
 	Route::get('categories', 'Store\CategoriesController@listCategories');
 	Route::get('categories/products', 'Store\CategoriesController@listProductsOfCategories');
 
+	Route::get('currencies', 'Store\CurrenciesController@listCurrencies');
+
 });
 
 Route::group(['prefix' => 'bratva'], function() {
