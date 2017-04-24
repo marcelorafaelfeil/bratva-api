@@ -34,6 +34,7 @@ Route::group(['prefix' => 'store'], function() {
 	Route::put('categories', 'Store\CategoriesController@updateCategory');
 	Route::delete('categories', 'Store\CategoriesController@removeCategories');
 	Route::get('categories', 'Store\CategoriesController@listCategories');
+	Route::get('categories/view', 'Store\CategoriesController@viewCategory');
 	Route::get('categories/products', 'Store\CategoriesController@listProductsOfCategories');
 
 	Route::get('currencies', 'Store\CurrenciesController@listCurrencies');

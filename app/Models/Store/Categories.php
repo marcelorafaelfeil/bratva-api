@@ -158,7 +158,7 @@ class Categories extends Model {
 		try {
 			$u = FriendlyUrl::create(['url' => $r->url]);
 			$c = Categories::create([
-				'father' => $r->father,
+				'father' => isset($r->father) ? $r->father : 0,
 				'name' => $r->name,
 				'status' => $r->status,
 				'friendly_url_id' => $u->id
@@ -178,14 +178,19 @@ class Categories extends Model {
 	public static function edit ($r, \Closure $success, \Closure $error) {
 		try {
 			$c = Categories::find($r->id);
-			$c->father = $r->father;
 			$c->name = $r->name;
 			$c->status = $r->status;
+			if(!isset($c->url) || empty($c->url)) {
+				$url = FriendlyUrl::create([
+					'url' => $c->url
+				]);
+				$c->friendly_url_id = $url->id;
+			} else {
+				$u = $c->url;
+				$u->url = $r->url;
+				$u->save();
+			}
 			$c->save();
-
-			$u = $c->url;
-			$u->url = $u->url;
-			$u->save();
 
 			return $success($c);
 		} catch (\Exception $e) {
@@ -232,6 +237,28 @@ class Categories extends Model {
 			}
 		}
 		return $count;
+	}
+
+	public static function view($r, \Closure $success, \Closure $error) {
+		try {
+
+			$cat = Categories::find($r->category);
+
+			$data = [
+				'id'=>$cat->id,
+				'name' => $cat->name,
+				'status' => $cat->status
+			];
+			if($cat->url) {
+				$data['url'] = $cat->url->url;
+			} else {
+				$data['url'] = '';
+			}
+
+			return $success($data);
+		} catch (\Exception $e) {
+			return $error($e);
+		}
 	}
 
 	/**

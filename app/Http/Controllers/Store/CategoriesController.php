@@ -16,15 +16,15 @@ class CategoriesController extends Controller {
 	protected function validateNewCategory ($r) {
 		$m = [];
 		if(empty($r->name)) {
-			$m['name'] = ['message' => 'O campo nome é obrigatório.'];
+			$m['name'] = 'O campo nome é obrigatório.';
 		}
 		if(!empty($r->father)) {
 			if(!Categories::has($r->father)) {
-				$m['father'] = ['message' => 'A categoria pai é inválida.'];
+				$m['father'] = 'A categoria pai é inválida.';
 			}
 		}
-		if(empty($r->status)) {
-			$m['status'] = ['message' => 'O campo status é obrigatório.'];
+		if(!isset($r->status) || $r->status === '') {
+			$m['status'] = 'O campo status é obrigatório.';
 		} else {
 			if(
 				!is_numeric($r->status) ||
@@ -33,14 +33,28 @@ class CategoriesController extends Controller {
 					$r->status != Categories::STATUS_TRUE
 				)
 			) {
-				$m['status'] = ['message' => 'O valor atribuído para o campo status, é inválido.'];
+				$m['status'] = 'O valor atribuído para o campo status, é inválido.';
 			}
 		}
 		if(empty($r->url)) {
-			$m['url'] = ['message' => 'O campo url é obrigatório.'];
+			$m['url'] = 'O campo url é obrigatório.';
 		} else {
 			if(FriendlyUrl::has($r->url)) {
-				$m['url'] = ['message' => 'O valor atribuído para o campo URL, já está em uso.'];
+				$m['url'] = 'O valor atribuído para o campo URL, já está em uso.';
+			}
+		}
+
+		return $m;
+	}
+
+	private function validateViewCategory($r) {
+		$m = [];
+
+		if(empty($r->category)) {
+			$m['category'] = 'É necessário selecionar a categoria.';
+		} else {
+			if(!Categories::has($r->category)) {
+				$m['category'] = 'A categoria selecionada não foi encontrada.';
 			}
 		}
 
@@ -54,23 +68,23 @@ class CategoriesController extends Controller {
 	protected function validateUpdateCategory ($r) {
 		$m = [];
 		if(empty($r->id)) {
-			$m['category'] = ['message' => 'É necessário selecionar a categoria que deseja editar.'];
+			$m['category'] = 'É necessário selecionar a categoria que deseja editar.';
 		} else {
 			if(!Categories::has($r->id)) {
-				$m['category'] = ['message' => 'Categoria não encontrada.'];
+				$m['category'] = 'Categoria não encontrada.';
 			}
 		}
 		if(count($m) == 0) {
 			if (empty($r->name)) {
-				$m['name'] = ['message' => 'O campo name é obrigatório.'];
+				$m['name'] = 'O campo name é obrigatório.';
 			}
 			if (!empty($r->father)) {
 				if (!Categories::has($r->father)) {
-					$m['father'] = ['message' => 'A categoria pai é inválida.'];
+					$m['father'] = 'A categoria pai é inválida.';
 				}
 			}
-			if (empty($r->status)) {
-				$m['status'] = ['message' => 'O campo status é obrigatório.'];
+			if (!isset($r->status) || $r->status === '') {
+				$m['status'] = 'O campo status é obrigatório.';
 			} else {
 				if (
 					!is_numeric($r->status) ||
@@ -79,14 +93,14 @@ class CategoriesController extends Controller {
 						$r->status != Categories::STATUS_TRUE
 					)
 				) {
-					$m['status'] = ['message' => 'O valor atribuído para o campo status, é inválido.'];
+					$m['status'] = 'O valor atribuído para o campo status, é inválido.';
 				}
 			}
 			if (empty($r->url)) {
-				$m['url'] = ['message' => 'O campo URL é obrigatório.'];
+				$m['url'] = 'O campo URL é obrigatório.';
 			} else {
 				if (FriendlyUrl::has($r->url, 'categories', $r->id)) {
-					$m['url'] = ['message' => 'O valor atribuído para o campo URL, já está em uso.'];
+					$m['url'] = 'O valor atribuído para o campo URL, já está em uso.';
 				}
 			}
 		}
@@ -100,11 +114,11 @@ class CategoriesController extends Controller {
 	protected function validateRemoveCategories ($r) {
 		$m = [];
 		if(count($r->categories) == 0) {
-			$m['category'] = ['message' => 'É necessário selecionar as categorias que deseja remover.'];
+			$m['category'] = 'É necessário selecionar as categorias que deseja remover.';
 		} else {
 			foreach($r->categories as $c) {
 				if(!Categories::has($c)) {
-					$m['category'] = ['message' => 'A categoria "' . $c . '", não foi encontrada.'];
+					$m['category'] = 'A categoria "' . $c . '", não foi encontrada.';
 				}
 			}
 		}
@@ -122,31 +136,31 @@ class CategoriesController extends Controller {
 
 		if(!empty($r->order_by)) {
 			if(!in_array($r->order_by, $orders)) {
-				$m['order_by'] = ['message' => 'O valor atribuído para o campo ordem, é inválido.'];
+				$m['order_by'] = 'O valor atribuído para o campo ordem, é inválido.';
 			} else if (empty($r->order_by)) {
-				$m['order_by'] = ['message' => 'O campo order é obrigatório enquanto o campo coluna estiver preenchido.'];
+				$m['order_by'] = 'O campo order é obrigatório enquanto o campo coluna estiver preenchido.';
 			}
 		}
 		if(!empty($r->order_column)) {
 			if(!in_array($r->order_column, $columns)) {
-				$m['order_column'] = ['message' => 'O valor atribuído para o campo coluna, é inválido'];
+				$m['order_column'] = 'O valor atribuído para o campo coluna, é inválido';
 			} else if (empty($r->order_column)) {
-				$m['order_column'] = ['message' => 'O campo coluna é obrigatório enquanto o campo ordem estiver preenchido.'];
+				$m['order_column'] = 'O campo coluna é obrigatório enquanto o campo ordem estiver preenchido.';
 			}
 		}
 		if(!empty($r->limit)) {
 			if(!is_numeric($r->limit) || $r->limit < 0) {
-				$m['limit'] = ['message' => 'O valor atribúdo para o campo limite, é inválido.'];
+				$m['limit'] = 'O valor atribúdo para o campo limite, é inválido.';
 			}
 		}
 		if($r->page) {
 			if(!is_numeric($r->page) || $r->page < 0) {
-				$m['page'] = ['message' => 'O valor atribuído para o cmapo page, é inváliod.'];
+				$m['page'] = 'O valor atribuído para o cmapo page, é inváliod.';
 			} else if(empty($r->limit)) {
-				$m['limit'] = ['message' => 'O campo limite é obrigatório enquanto o campo page estiver preenchido.'];
+				$m['limit'] = 'O campo limite é obrigatório enquanto o campo page estiver preenchido.';
 			}
 		}
-		if(!empty($r->status)) {
+		if(isset($r->status) && $r->status != '') {
 			if(
 				!is_numeric($r->status) ||
 				(
@@ -154,7 +168,7 @@ class CategoriesController extends Controller {
 					$r->status != Categories::STATUS_TRUE
 				)
 			) {
-				$m['status'] = ['message' => 'O valor atribuído para o campo status, é inválido.'];
+				$m['status'] = 'O valor atribuído para o campo status, é inválido.';
 			}
 		}
 
@@ -166,7 +180,7 @@ class CategoriesController extends Controller {
 		return $pc->validation($r, function() use ($r) {
 			$m=[];
 			if(empty($r->category_id) && empty($r->category_url)) {
-				$m['category'] = ['message' => 'É necessário informar o código ou url da categoria.'];
+				$m['category'] = 'É necessário informar o código ou url da categoria.';
 			}
 			return $m;
 		}, function($m) {
@@ -197,6 +211,9 @@ class CategoriesController extends Controller {
 				break;
 			case 'listCategories' :
 				$m = self::validateListCategories($r);
+				break;
+			case 'viewCategory' :
+				$m = self::validateViewCategory($r);
 				break;
 			case 'listProductsOfCategories' :
 				$m = self::validationListProductsOfCategories($r);
@@ -371,6 +388,36 @@ class CategoriesController extends Controller {
 					'messages' => $m
 				]
 			], 400);
+		});
+	}
+
+	public function viewCategory(Request $r) {
+		return $this->validation($r, function() use ($r) {
+			return Categories::view($r, function($data) {
+				return \Response::json([
+					'success' => [
+						'message' => 'Categoria retornada com sucesso.',
+						'data' => $data
+					]
+				], 200);
+			}, function($e) {
+				return \Response::json([
+					'error' => [
+						'message' => 'Erro interno. Tente novamente mais tarde.',
+						'internal' => [
+							'message' => $e->getMessage(),
+							'file' => $e->getFile(),
+							'line' => $e->getLine()
+						]
+					]
+				], 500);
+			});
+		}, function($m) {
+			return \Response::json([
+				'errors' => [
+					'message' => $m
+				]
+			],400);
 		});
 	}
 }

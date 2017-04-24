@@ -219,7 +219,7 @@ class Products extends Model {
 				$url = FriendlyUrl::create([
 					'url' => $p->url
 				]);
-				$p->friendly_url_id = $p->id;
+				$p->friendly_url_id = $url->id;
 			} else {
 				$u = $p->url;
 				$u->url = $r->url;
