@@ -148,23 +148,36 @@ class Pages extends Model {
 			$orderColumn = isset($r->orderColumn) ? $r->orderColumn : 'id';
 			$limit = isset($r->limit) ? $r->limit : null;
 			$page = isset($r->page) ? $r->page : null;
-			$status = isset($r->status) ? $r->status : 1;
+			$status = isset($r->status) ? $r->status : null;
 
 			$Pages = Pages::query();
 
 			if ($r->activeds) {
-				$Pages->where([
-					['status', '=', $status],
-					['expire', '=', 1],
-					['date_start', '<=', date('Y-m-d H:i:s')],
-					['date_end', '>=', date('Y-m-d H:i:s')]
-				]);
-				$Pages->orWhere([
-					['status', '=', $status],
-					['expire', '=', 0],
-				]);
+				if(isset($r->status)) {
+					$Pages->where([
+						['status', '=', $status],
+						['expire', '=', 1],
+						['date_start', '<=', date('Y-m-d H:i:s')],
+						['date_end', '>=', date('Y-m-d H:i:s')]
+					]);
+					$Pages->orWhere([
+						['status', '=', $status],
+						['expire', '=', 0],
+					]);
+				} else {
+					$Pages->where([
+						['expire', '=', 1],
+						['date_start', '<=', date('Y-m-d H:i:s')],
+						['date_end', '>=', date('Y-m-d H:i:s')]
+					]);
+					$Pages->orWhere([
+						['expire', '=', 0]
+					]);
+				}
 			} else {
-				$Pages->where('status', '=', $status);
+				if(isset($r->status)) {
+					$Pages->where('status', '=', $status);
+				}
 			}
 
 			$Pages->orderBy($orderColumn, $orderBy);
@@ -199,6 +212,7 @@ class Pages extends Model {
 		try {
 			$p = Pages::find($code);
 			$data = [
+				'id' => $p->id,
 				'title' => $p->title,
 				'content' => $p->content,
 				'short_description' => $p->short_description,

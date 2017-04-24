@@ -17,18 +17,18 @@ class PagesController extends Controller {
 		$m = [];
 		if ($r->expire == Pages::EXPIRE_TRUE) {
 			if (empty($r->date_start)) {
-				$m['date_start'] = ['message' => 'O campo da data de início de exibição, é obrigatório.'];
+				$m['date_start'] = 'O campo da data de início de exibição, é obrigatório.';
 			}
 			if (empty($r->date_end)) {
-				$m['date_end'] = ['message' => 'O campo da data de fim de exibição, é obrigatório.'];
+				$m['date_end'] = 'O campo da data de fim de exibição, é obrigatório.';
 			}
 			if (!empty($r->date_start) && !empty($r->date_end)) {
 				$valid = false;
 				if (!Utils::ValidateDate($r->date_start)) {
-					$m['date_start'] = ['message' => 'O valor atribuído para o campo data de inicío de exibição, é inválido.'];
+					$m['date_start'] = 'O valor atribuído para o campo data de inicío de exibição, é inválido.';
 				} else $valid = true;
 				if (!Utils::ValidateDate($r->date_end)) {
-					$m['date_end'] = ['message' => 'O valora tribuído para o campo data de fim de exibição, é inválido.'];
+					$m['date_end'] = 'O valora tribuído para o campo data de fim de exibição, é inválido.';
 					$valid = false;
 				}
 
@@ -37,7 +37,7 @@ class PagesController extends Controller {
 					$dateEnd = new \DateTime($r->date_end);
 
 					if ($dateStart >= $dateEnd) {
-						$m['date_end'] = ['message' => 'A data de fim de exibição deve ser maior que a data de início de exibição.'];
+						$m['date_end'] = 'A data de fim de exibição deve ser maior que a data de início de exibição.';
 					}
 				}
 			}
@@ -60,11 +60,11 @@ class PagesController extends Controller {
 					$r->expire != Pages::EXPIRE_TRUE
 				)
 			) {
-				$m['expire'] = ['message' => 'O valor atribuído para o campo expirar, é inválido.'];
+				$m['expire'] = 'O valor atribuído para o campo expirar, é inválido.';
 			}
 		}
-		if (empty($r->status)) {
-			$m['status'] = ['message' => 'O campo status é obrigatório.'];
+		if (!isset($r->status) || $r->status === '') {
+			$m['status'] = 'O campo status é obrigatório.';
 		} else {
 			if (
 				!is_numeric($r->status) ||
@@ -73,7 +73,7 @@ class PagesController extends Controller {
 					$r->status != Pages::STATUS_TRUE
 				)
 			) {
-				$m['status'] = ['message' => 'O valor atribuído para o campo status, é inválido.'];
+				$m['status'] = 'O valor atribuído para o campo status, é inválido.';
 			}
 		}
 
@@ -89,15 +89,15 @@ class PagesController extends Controller {
 		$m = [];
 
 		if(empty($r->url)) {
-			$m['friendly_url'] = ['message' => 'O campo URL é obrigatório.'];
+			$m['url'] = 'O campo URL é obrigatório.';
 		} else {
 			if($id) {
 				if (FriendlyUrl::has($r->url, 'pages', $r->id)) {
-					$m['friendly_url'] = ['messages' => 'A URL informada já está em uso.'];
+					$m['url'] = 'A URL informada já está em uso.';
 				}
 			} else {
 				if (FriendlyUrl::has($r->url)) {
-					$m['friendly_url'] = ['message' => 'A URL informada já está em uso.'];
+					$m['url'] = 'A URL informada já está em uso.';
 				}
 			}
 		}
@@ -112,7 +112,7 @@ class PagesController extends Controller {
 	protected static function validationNewPage($r) {
 		$m = [];
 		if(empty($r->title)) {
-			$m['title'] = ['message' => 'O campo titulo é obrigatório.'];
+			$m['title'] = 'O campo titulo é obrigatório.';
 		}
 		if($messages = self::validateFriendlyUrl($r)) {
 			foreach ($messages as $k => $v) {
@@ -139,10 +139,10 @@ class PagesController extends Controller {
 	public static function validationUpdatePage($r) {
 		$m = [];
 		if(empty($r->id)) {
-			$m['page'] = ['message' => 'É necessário selecionar a página que deseja apagar.'];
+			$m['page'] = 'É necessário selecionar a página que deseja apagar.';
 		} else {
 			if (empty($r->title)) {
-				$m['title'] = ['message' => 'O campo título é obrigatório.'];
+				$m['title'] = 'O campo título é obrigatório.';
 			}
 			if ($messages = self::validateFriendlyUrl($r, $r->id)) {
 				foreach ($messages as $k => $v) {
@@ -170,11 +170,11 @@ class PagesController extends Controller {
 	public static function validationRemovePages($r) {
 		$m = [];
 		if(count($r->pages) == 0) {
-			$m['pages'] = ['messages' => 'É necessário selecionar a página que deseja apagar.'];
+			$m['pages'] = 'É necessário selecionar a página que deseja apagar.';
 		} else {
 			foreach($r->pages as $p) {
 				if(!Pages::has($p)) {
-					$m['pages'] = ['messages' => 'A página "' . $p . '", não foi encontrada.'];
+					$m['pages'] = 'A página "' . $p . '", não foi encontrada.';
 					break;
 				}
 			}
@@ -192,19 +192,19 @@ class PagesController extends Controller {
 		$columns = ['id', 'title', 'created_at', 'updated_at'];
 
 		if(!empty($r->orderBy) && !in_array($r->orderBy, $orders)) {
-			$m['orderBy'] = ['message' => 'O valor atribuído para o campo orderBy, é inválido.'];
+			$m['orderBy'] = 'O valor atribuído para o campo orderBy, é inválido.';
 		}
 		if(!empty($r->orderColumn && !in_array($r->orderColumn, $columns))) {
-			$m['orderColumns'] = ['messages' => 'O valor atribuído para o campo orderColumns, é inválido.'];
+			$m['orderColumns'] = 'O valor atribuído para o campo orderColumns, é inválido.';
 		}
 		if(!empty($r->activeds) && !is_numeric($r->activeds)) {
-			$m['activeds'] = ['messages' => 'O valora tribuído para o campo activeds, é inválido.'];
+			$m['activeds'] = 'O valora tribuído para o campo activeds, é inválido.';
 		}
 		if(!empty($r->limit) && !is_numeric($r->limit)) {
-			$m['limit'] = ['message' => 'O valor atribuído para o campo limit, é inválido.'];
+			$m['limit'] = 'O valor atribuído para o campo limit, é inválido.';
 		}
 		if(!empty($r->page) && !is_numeric($r->page)) {
-			$m['page'] = ['message' => 'O valor atribuído para o campo page, é inválido.'];
+			$m['page'] = 'O valor atribuído para o campo page, é inválido.';
 		}
 
 		return $m;
@@ -217,10 +217,10 @@ class PagesController extends Controller {
 	public static function validationViewByUrl($url) {
 		$m = [];
 		if(empty($url)) {
-			$m['page'] = ['message' => 'É necessário informar a URL da página.'];
+			$m['page'] = 'É necessário informar a URL da página.';
 		} else {
 			if(!Pages::hasByUrl($url)) {
-				$m['page'] = ['message' => 'Página não encontrada.'];
+				$m['page'] = 'Página não encontrada.';
 			}
 		}
 
