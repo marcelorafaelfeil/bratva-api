@@ -27,6 +27,7 @@ Route::group(['prefix' => 'store'], function() {
 	Route::put('brands', 'Store\BrandsController@updateBrand');
 	Route::delete('brands', 'Store\BrandsController@removeBrands');
 	Route::get('brands', 'Store\BrandsController@listBrands');
+	Route::get('brands/view', 'Store\BrandsController@viewBrand');
 	Route::get('brands/products', 'Store\BrandsController@listProductsOfBrand');
 
 	// Categories

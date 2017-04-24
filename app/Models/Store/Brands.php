@@ -62,6 +62,10 @@ class Brands extends Model
 		return !!($b);
 	}
 
+	/**
+	 * @param $url
+	 * @return bool
+	 */
 	public static function hasUrl($url) {
 		$table = (new FriendlyUrl())->getTable();
 		$b = Brands::whereHas('url', function($query) use ($url, $table) {
@@ -248,6 +252,28 @@ class Brands extends Model
 				break;
 			default :
 				return 'Indefinido';
+		}
+	}
+
+	public static function view($r, \Closure $success, \Closure $error) {
+		try {
+			$b = Brands::find($r->brand);
+
+			$data = [
+				'id' => $b->id,
+				'name' => $b->name,
+				'description' => $b->description,
+				'status' => $b->status
+			];
+
+			if($b->url) {
+				$data['url'] = $b->url->url;
+			}
+
+
+			return $success($data);
+		} catch(\Exception $e) {
+			return $error($e);
 		}
 	}
 }

@@ -9,6 +9,7 @@ namespace App\Http\Controllers\Store;
 use App\Http\Controllers\Controller;
 use App\Models\Generic\FriendlyUrl;
 use App\Models\Store\Brands;
+use App\Models\Store\Categories;
 use Illuminate\Http\Request;
 
 class BrandsController extends Controller {
@@ -150,11 +151,25 @@ class BrandsController extends Controller {
 		if (count($r->brands) > 0) {
 			foreach ($r->brands as $b) {
 				if (!Brands::has($b)) {
-					$m['brands'] = ['A marca "' . $b . '", não foi encontrada.'];
+					$m['brands'] = 'A marca "' . $b . '", não foi encontrada.';
 				}
 			}
 		} else {
 			$m['brands'] = ['message' => 'É necessário selecionar a marca que deseja apagar.'];
+		}
+
+		return $m;
+	}
+
+	private static function validationViewBrand ($r) {
+		$m = [];
+
+		if(!isset($r->brand) || empty($r->brand)) {
+			$m['brand'] = 'É necessário selecionar a marca.';
+		} else {
+			if(!Brands::has($r->brand)) {
+				$m['brand'] = 'A marca selecionada não foi encontrada';
+			}
 		}
 
 		return $m;
@@ -212,7 +227,10 @@ class BrandsController extends Controller {
 			case 'listBrands' :
 				$m = self::validationListBrands($r);
 				break;
-			case 'listProductsOfBrand' :
+			case 'viewBrand':
+				$m = self::validationViewBrand($r);
+				break;
+			case 'listProductsOfBrand':
 				$m = self::validationListProductsOfBrand($r);
 				break;
 		}
@@ -383,6 +401,36 @@ class BrandsController extends Controller {
 				], 500);
 			});
 		}, function ($m) {
+			return \Response::json([
+				'errors' => [
+					'messages' => $m
+				]
+			], 400);
+		});
+	}
+
+	public function viewBrand (Request $r) {
+		return $this->validation($r, function() use ($r) {
+			return Brands::view($r, function($data) {
+				return \Response::json([
+					'success' => [
+						'message' => 'Marca retornada com sucesso.',
+						'data' => $data
+					]
+				], 200);
+			}, function($e) {
+				return \Response::json([
+					'error' => [
+						'message' => 'Erro interno. Tente novamente mais tarde',
+						'errors' => [
+							'message' => $e->getMessage(),
+							'file' => $e->getFile(),
+							'line' => $e->getLine()
+						]
+					]
+				], 500);
+			});
+		}, function($m) {
 			return \Response::json([
 				'errors' => [
 					'messages' => $m
