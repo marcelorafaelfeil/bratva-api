@@ -210,6 +210,10 @@ class PagesController extends Controller {
 		return $m;
 	}
 
+	/**
+	 * @param $url
+	 * @return array
+	 */
 	public static function validationViewByUrl($url) {
 		$m = [];
 		if(empty($url)) {
@@ -220,6 +224,24 @@ class PagesController extends Controller {
 			}
 		}
 
+
+		return $m;
+	}
+
+	/**
+	 * @param $id
+	 * @return array
+	 */
+	private function validationViewById($id) {
+		$m = [];
+
+		if(empty($id)) {
+			$m['page'] = 'É necessário selecionar a página.';
+		} else {
+			if(!Pages::has($id)) {
+				$m['page'] = 'Página não encontrada.';
+			}
+		}
 
 		return $m;
 	}
@@ -250,6 +272,9 @@ class PagesController extends Controller {
 				break;
 			case 'viewPageByUrl':
 				$m = self::validationViewByUrl($r);
+				break;
+			case 'viewPageById':
+				$m = self::validationViewById($r);
 				break;
 		}
 

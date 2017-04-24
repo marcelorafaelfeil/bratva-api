@@ -73,6 +73,7 @@ Route::group(['prefix' => 'web'], function() {
 	Route::get('pages', 'Website\PagesController@listPages');
 	Route::get('pages/{code}/viewbycode', 'Website\PagesController@viewPageById');
 	Route::get('pages/{url}/view', 'Website\PagesController@viewPageByUrl');
+	Route::get('pages/{code}/viewById', 'Website\PagesController@viewPageById');
 
 	// Menus
 	Route::post('menu', 'Website\MenuController@newMenu');

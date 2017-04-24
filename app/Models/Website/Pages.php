@@ -198,8 +198,22 @@ class Pages extends Model {
 	public static function view ($code, \Closure $success, \Closure $error) {
 		try {
 			$p = Pages::find($code);
-			$p->url;
-			return $success($p);
+			$data = [
+				'title' => $p->title,
+				'content' => $p->content,
+				'short_description' => $p->short_description,
+				'long_description' => $p->long_description,
+				'status' => $p->status,
+				'expire' => $p->expire,
+				'date_start' => $p->date_start,
+				'date_end' => $p->date_end
+			];
+			if($p->url) {
+				$data['url'] = $p->url->url;
+			} else {
+				$data['url'] = '';
+			}
+			return $success($data);
 		} catch (\Exception $e) {
 			return $error($e);
 		}
