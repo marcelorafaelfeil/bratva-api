@@ -280,7 +280,7 @@ class BrandsController extends Controller {
 	 * @return mixed
 	 */
 	public function updateBrand (Request $request) {
-		return $this->validation($request, function ($m) use ($request) {
+		return $this->validation($request, function () use ($request) {
 			return Brands::edit($request, function ($data) {
 				return \Response::json([
 					'success' => [
@@ -321,7 +321,7 @@ class BrandsController extends Controller {
 						'message' => 'Marcas apagadas com sucesso.',
 						'data' => $data
 					]
-				], 500);
+				], 200);
 			}, function ($e) {
 				return \Response::json([
 					'error' => [
@@ -338,7 +338,7 @@ class BrandsController extends Controller {
 				'errors' => [
 					'message' => $m
 				]
-			], 404);
+			], 400);
 		});
 	}
 
