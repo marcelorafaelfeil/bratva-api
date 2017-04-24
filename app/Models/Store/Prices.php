@@ -21,6 +21,13 @@ class Prices extends Model
 		'currencies_id',
 		'safe_delete'
 	];
+
+	public function newQuery () {
+		$query = parent::newQuery();
+		$query->where('safe_delete', '=', 0);
+		return $query;
+	}
+
 	/**
 	 * @return \Illuminate\Database\Eloquent\Relations\HasOne
 	 */

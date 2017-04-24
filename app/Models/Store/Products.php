@@ -3,6 +3,7 @@
 namespace App\Models\Store;
 
 use App\Models\Generic\FriendlyUrl;
+use App\Models\Generic\Images;
 use Illuminate\Database\Eloquent\Model;
 
 class Products extends Model {
@@ -137,8 +138,10 @@ class Products extends Model {
 	 */
 	public static function add ($r, \Closure $f, \Closure $error) {
 		try {
+
 			$u = FriendlyUrl::create(['url' => $r->url]);
-			$p = Products::create([
+
+			$prd = [
 				'name' => $r->name,
 				'code' => $r->code,
 				'quantity' => $r->quantity,
@@ -147,9 +150,15 @@ class Products extends Model {
 				'short_description' => $r->short_description,
 				'long_description' => $r->long_description,
 				'categories_id' => $r->category,
-				'brands_id' => $r->brand,
 				'friendly_url_id' => $u->id
-			]);
+			];
+
+			if ($r->brand > 0)
+				$prd['brands_id'] = $r->brand;
+			else
+				$prd['brands_id'] = NULL;
+
+			$p = Products::create($prd);
 			$p->sales_info()
 				->create([
 					'width' => $r->width,
@@ -159,6 +168,23 @@ class Products extends Model {
 					'weight' => $r->weight
 				]);
 
+			if (isset($r->prices) && count($r->prices) > 0) {
+				for ($i = 0; $i < count($r->prices); $i++) {
+					$prc = $r->prices[$i];
+					if ($prc['value'] != '') {
+						$price = Prices::create([
+							'value' => $prc['value'],
+							'status' => $prc['status'],
+							'default' => $prc['default'],
+							'validity_at' => $prc['validity_at'],
+							'validity_to' => $prc['validity_to'],
+							'currencies_id' => $prc['currencies_id']
+						]);
+
+						$p->prices()->attach($price);
+					}
+				}
+			}
 			if ($r->categories)
 				Products::relationWithCategories($p->id, $r->categories);
 
@@ -185,25 +211,82 @@ class Products extends Model {
 			$p->short_description = $r->short_description;
 			$p->long_description = $r->long_description;
 			$p->categories_id = $r->category;
-			$p->brands_id = $r->brand;
+			$p->brands_id = ($r->brand == 0) ? NULL : $r->brand;
+			$r->categories = isset($r->categories) ? $r->categories : [];
 
 
-			$u = $p->url;
-			$u->url = $r->url;
-			$u->save();
+			if(!isset($p->url) || empty($p->url)) {
+				$url = FriendlyUrl::create([
+					'url' => $p->url
+				]);
+				$p->friendly_url_id = $p->id;
+			} else {
+				$u = $p->url;
+				$u->url = $r->url;
+				$u->save();
+			}
 			$p->save();
 
-			$si = $p->sales_info()->first();
-			$si->width = $r->width;
-			$si->height = $r->height;
-			$si->length = $r->length;
-			$si->diameter = $r->diameter;
-			$si->weight = $r->weight;
-			$si->save();
+			if($si = $p->sales_info()->first()) {
+				$si->width = $r->width;
+				$si->height = $r->height;
+				$si->length = $r->length;
+				$si->diameter = $r->diameter;
+				$si->weight = $r->weight;
+				$si->save();
+			} else {
+				$si = SalesInfo::create([
+					'width' => $r->width,
+					'height' => $r->height,
+					'length' => $r->length,
+					'diameter' => $r->diameter,
+					'weight' => $r->weight
+				]);
+				$p->sales_info()->attach($si);
+			}
 
-			if ($r->categories)
-				Products::relationWithCategories($r->id, $r->categories);
+			/**** PREÇOS ****/
+			// Apaga todos os preços diferente dos que existe na array
+			$idPrices = [];
+			for ($i = 0; $i < count($r->prices); $i++) {
+				if (isset($r->prices[$i]['id']) && !empty($r->prices[$i]['id'])) {
+					array_push($idPrices, $r->prices[$i]['id']);
+				}
+			}
 
+			$prices = $p->prices();
+			$prices->whereNotIn('id', $idPrices)->update(['safe_delete' => 1]);
+
+			if (count($r->prices)) {
+				for ($i = 0; $i < count($r->prices); $i++) {
+					$prc = $r->prices[$i];
+					if (isset($prc['id']) && !empty($prc['id'])) {
+						$price = Prices::find($prc['id']);
+						$price->value = $prc['value'];
+						$price->status = $prc['status'];
+						$price->default = $prc['default'];
+						$price->validity_at = $prc['validity_at'];
+						$price->validity_to = $prc['validity_to'];
+						$price->currencies_id = $prc['currencies_id'];
+						$price->save();
+					} else {
+						$price = Prices::create([
+							'value' => $prc['value'],
+							'status' => $prc['status'],
+							'default' => $prc['default'],
+							'validity_at' => $prc['validity_at'],
+							'validity_to' => $prc['validity_to'],
+							'currencies_id' => $prc['currencies_id']
+						]);
+
+						$p->prices()->attach($price);
+					}
+				}
+			}
+
+			Products::relationWithCategories($r->id, $r->categories);
+
+			$p->prices = $p->prices()->get();
 			return $f($p);
 		} catch (\Exception $e) {
 			return $error($e);
@@ -262,7 +345,7 @@ class Products extends Model {
 		$order_by = 'DESC';
 		$limit = null;
 		$page = null;
-		$hasImage = isset($r->hasImage) ? $r->hasImage : 1;
+		$hasImage = isset($r->hasImage) ? $r->hasImage : null;
 
 		if (isset($r->featured))
 			$where[] = [$t_prods . '.featured', '=', $r->featured];
@@ -281,8 +364,8 @@ class Products extends Model {
 
 		$prds = $Product->where($where);
 
+		$t_price = (new Prices())->getTable();
 		if ($order_column == 'prices') {
-			$t_price = (new Prices())->getTable();
 			$t_fk = $t_prods . '_has_' . $t_price;
 
 			$prds
@@ -317,7 +400,7 @@ class Products extends Model {
 			->get();
 		$data = [];
 		foreach ($products as $p) {
-			if (($hasImage && $p->images()->count() > 0) || !$hasImage) {
+			if (!isset($hasImage) || (($hasImage && $p->images()->count() > 0) || (!$hasImage && $p->images()->count() == 0))) {
 				$price = 0.0;
 				$image = "";
 				$url = "";
@@ -325,22 +408,25 @@ class Products extends Model {
 
 				$date = new \DateTime();
 				$prices = $p
-					->prices()
-					->where(function ($query) use ($date) {
-						$query->where(function ($query) use ($date) {
-							$query->where('validity_at', '<=', $date->format('Y-m-d H:i:s'));
-							$query->where('validity_to', '>=', $date->format('Y-m-d H:i:s'));
-						});
-						$query->orWhere(function ($query) use ($date) {
-							$query->where('validity_at', '<=', $date->format('Y-m-d H:i:s'));
-						});
-						$query->orWhere('default', '=', Prices::DEFAULT_TRUE);
-					});
+					->prices();
+
+				$prices = $prices->get();
+				$price = 0;
+				foreach ($prices as $prc) {
+					if (
+						$prc->validity_at <= $date->format('Y-m-d H:i:s') &&
+						$prc->validity_to >= $date->format('Y-m-d H:i:s')
+					) {
+						$price = $prc->value;
+					} else if ($prc->default == Prices::DEFAULT_TRUE) {
+						$price = $prc->value;
+					}
+				}
+
+
 				$images = $p
 					->images()
 					->orderBy('featured', 'DESC');
-				if ($prc = $prices->first())
-					$price = $prc->value;
 				if ($images = $images->first())
 					$image = $images->src;
 				if (isset($p->url->url))
@@ -368,18 +454,45 @@ class Products extends Model {
 	}
 
 	/**
-	 * @param $url
-	 * @param \Closure $success
-	 * @param \Closure $error
+	 * @param $key
+	 * @param $type
 	 * @return mixed
 	 */
-	public static function view ($url, \Closure $success, \Closure $error) {
-		try {
-			$p = FriendlyUrl::where('url', '=', $url)->first()->product;
-			$p->brand;
-			$p->url;
-			$p->images = $p->images()->orderBy('featured', 'DESC')->get();
+	private static function getViewProduct ($key, $type) {
+		if ($type == 'url')
+			$p = FriendlyUrl::where('url', '=', $key)->first()->product;
+		else if ($type == 'id')
+			$p = Products::find($key);
 
+		$p->brand;
+		$p->url;
+		$p->images = $p->images()->orderBy('featured', 'DESC')->get();
+
+		$kd = str_split($p->id);
+		$i = 0;
+		$keydir = '';
+		foreach ($kd as $k) {
+			$i++;
+			$keydir .= $k;
+			if (count($kd) > $i) {
+				$keydir .= '/';
+			}
+		}
+		foreach ($p->images as $i => $img) {
+			$name = explode('/', $img->src);
+			$name = $name[count($name) - 1];
+			$ext = explode('.', $name);
+			$ext = $ext[count($ext) - 1];
+			$path = storage_path() . '/products/' . $keydir . '/' . $name;
+			if (file_exists($path)) {
+				$base64 = base64_encode(file_get_contents($path));
+				//$base64 = 'data:image/'.$ext.';base64,'.$base64;
+				$p->images[$i]->base64 = $base64;
+			}
+		}
+
+
+		if ($type == 'url') {
 			$date = new \DateTime();
 			$prices = $p
 				->prices()
@@ -398,7 +511,42 @@ class Products extends Model {
 				$price = $prc->value;
 
 			$p->price = $price;
-			return $success($p);
+		} else {
+			$p->prices = $p->prices()->get();
+
+			$categories = [];
+			foreach ($p->categories()->get() as $c) {
+				array_push($categories, $c->id);
+			}
+			$p->categories = $categories;
+		}
+
+		return $p;
+	}
+
+	/**
+	 * @param $url
+	 * @param \Closure $success
+	 * @param \Closure $error
+	 * @return mixed
+	 */
+	public static function view ($url, \Closure $success, \Closure $error) {
+		try {
+			return $success(self::getViewProduct($url, 'url'));
+		} catch (\Exception $e) {
+			return $error($e);
+		}
+	}
+
+	/**
+	 * @param $id
+	 * @param \Closure $success
+	 * @param \Closure $error
+	 * @return mixed
+	 */
+	public static function viewById ($id, \Closure $success, \Closure $error) {
+		try {
+			return $success(self::getViewProduct($id, 'id'));
 		} catch (\Exception $e) {
 			return $error($e);
 		}
@@ -422,8 +570,10 @@ class Products extends Model {
 		try {
 			$Product = Products::find($product);
 			$Product->categories()->detach();
-			foreach ($categories as $c) {
-				$Product->categories()->attach($c);
+			if(count($categories) > 0) {
+				foreach ($categories as $c) {
+					$Product->categories()->attach($c);
+				}
 			}
 		} catch (\Exception $e) {
 			throw new \Exception($e->getMessage(), 500, $e);
@@ -444,6 +594,39 @@ class Products extends Model {
 				break;
 			default :
 				return 'Indefinido';
+		}
+	}
+
+	/**
+	 * @param $r
+	 * @param \Closure $success
+	 * @param \Closure $error
+	 * @return mixed
+	 */
+	public static function featuredImage ($r, \Closure $success, \Closure $error) {
+		try {
+			// Muda todas as imagens para featured = 0
+			$p = Products::find($r->product);
+			$images = $p->images();
+			$images->update(['featured' => 0]);
+			$img = Images::find($r->image);
+			$img->featured = 1;
+			$img->save();
+
+			return $success($img);
+		} catch (\Exception $e) {
+			return $error($e);
+		}
+	}
+
+	public static function hasImage($product, $image) {
+		$p = Products::find($product);
+		if($p) {
+			$img = $p->images();
+			$img->where('id', '=', $image);
+			return ($img->count() > 0);
+		} else {
+			return 0;
 		}
 	}
 }

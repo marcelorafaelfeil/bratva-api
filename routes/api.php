@@ -19,6 +19,8 @@ Route::group(['prefix' => 'store'], function() {
 	Route::delete('products', 'Store\ProductsController@removeProducts');
 	Route::get('products', 'Store\ProductsController@listProducts');
 	Route::get('product/{url}/view', 'Store\ProductsController@viewProduct');
+	Route::get('product/{id}/viewById', 'Store\ProductsController@viewProductById');
+	Route::put('product/featuredImage', 'Store\ProductsController@featuredImage');
 
 	// Brands
 	Route::post('brands', 'Store\BrandsController@newBrand');

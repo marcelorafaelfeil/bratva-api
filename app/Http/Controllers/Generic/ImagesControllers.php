@@ -84,7 +84,6 @@ class ImagesControllers extends UploadsController
 				}
 			}
 		}
-
 		return $fun($m);
 	}
 
@@ -118,13 +117,20 @@ class ImagesControllers extends UploadsController
 					foreach ($request->file('images') as $k => $file) {
 						$this->Upload($file, function ($name) use ($section, $key, $k, $request, $count) {
 
-							$img = Images::create([
-								'src' => env('APP_IMAGES_URL') . $this->PATHS[$section] . $key. '/' . $name,
-								'legend' => isset($request->legend[$k]) ? $request->legend[$k] : '',
-								'featured' => isset($request->featured[$k]) ? $request->featured[$k] : Images::FEATURED_FALSE
-							]);
+							if(isset($request->idImage[$k]) && !empty($request->idImage[$k])) {
+								$img = Images::find($request->idImage[$k]);
+								$img->src = env('APP_IMAGES_URL') . $this->PATHS[$section] . $key . '/' . $name;
+								$img->legend = isset($request->legend[$k]) ? $request->legend[$k] : '';
+								$img->save();
+							} else {
+								$img = Images::create([
+									'src' => env('APP_IMAGES_URL') . $this->PATHS[$section] . $key . '/' . $name,
+									'legend' => isset($request->legend[$k]) ? $request->legend[$k] : '',
+									'featured' => isset($request->featured[$k]) ? $request->featured[$k] : Images::FEATURED_FALSE
+								]);
 
-							Images::createRelation($section, $key, $img);
+								Images::createRelation($section, $key, $img);
+							}
 						}, function ($e) use ($file) {
 							throw new \Exception('Ocorreu um erro ao tentar salvar a imagem ' . $file->getClientOriginalName() . '.', 0, $e);
 						});
@@ -151,7 +157,7 @@ class ImagesControllers extends UploadsController
 						'file' => $prev->getFile(),
 						'line' => $prev->getLine()
 					],
-					'message' => $e->getMessage()
+					'message' => 'Erro interno. Tente novamente mais tarde.'
 				]
 			], 500);
 		}

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Store;
 
 use App\Http\Controllers\Controller;
 use App\Models\Generic\FriendlyUrl;
+use App\Models\Generic\Images;
 use App\Models\Store\Brands;
 use App\Models\Store\Categories;
 use App\Models\Store\Products;
@@ -27,6 +28,29 @@ class ProductsController extends Controller {
 			} else {
 				if(!FriendlyUrl::has($d, 'products')) {
 					$m['product'] = ['message' => 'Produto não encontrado.'];
+				}
+			}
+		} else if($call == 'viewProductById') {
+			if(empty($d)) {
+				$m['product'] = ['message' => 'É necessário selecionar o produto que deseja visualizar.'];
+			} else {
+				if(!Products::has($d)) {
+					$m['product'] = ['message' => 'Produto não encontrado.'];
+				}
+			}
+		} else if($call == 'featuredImage') {
+			if(!isset($d->product) || empty($d->product)) {
+				$m['product'] = ['message' => 'Não foi possível identificar o produto.'];
+			} else {
+				if(!Products::has($d->product)) {
+					$m['product'] = ['message' => 'O produto informado não foi encontrado.'];
+				}
+			}
+			if(!isset($d->image) || empty($d->image)) {
+				$m['image'] = ['message' => 'É necessário selecionar a imagem que deseja marcar como principal.'];
+			} else {
+				if(!Products::hasImage($d->product, $d->image)) {
+					$m['image'] = ['message' => 'A imagem selecionada não foi encontrada neste produto.'];
 				}
 			}
 		} else {
@@ -134,6 +158,8 @@ class ProductsController extends Controller {
 						if (Products::hasCode($d->code, $d->id)) {
 							$m['code'] = 'O valor atribuído ao campo código, já está em uso.';
 						}
+					} else {
+						$m['code'] = 'O campo código é obrigatório.';
 					}
 					if (!empty($d->quantity)) {
 						if (!is_numeric($d->quantity) || $d->quantity < 0) {
@@ -369,6 +395,74 @@ class ProductsController extends Controller {
 						'message' => 'Erro interno. Tente novamente mais tarde.'
 					]
 				]);
+			});
+		}, function($m) {
+			return \Response::json([
+				'errors' => [
+					'messages' => $m
+				]
+			], 400);
+		});
+	}
+
+	/**
+	 * @param $id
+	 * @return mixed
+	 */
+	public function viewProductById ($id) {
+		return $this->validation($id, function() use ($id) {
+			return Products::viewById($id, function($data) {
+				return \Response::json([
+					'success' => [
+						'message' => 'Produto retornado com sucesso.',
+						'data' => $data
+					]
+				],200);
+			}, function($e) {
+				return \Response::json([
+					'error' => [
+						'internal' => [
+							'message' => $e->getMessage(),
+							'line' => $e->getLine(),
+							'file' => $e->getFile()
+						],
+						'message' => 'Erro interno. Tente novamente mais tarde.'
+					]
+				]);
+			});
+		}, function($m) {
+			return \Response::json([
+				'errors' => [
+					'messages' => $m
+				]
+			], 400);
+		});
+	}
+
+	/**
+	 * @param Request $r
+	 * @return mixed
+	 */
+	public function featuredImage (Request $r) {
+		return $this->validation($r, function() use ($r) {
+			return Products::featuredImage($r, function($data) {
+				return \Response::json([
+					'success' => [
+						'message' => 'Imagem alterada com sucesso.',
+						'data' => $data
+					]
+				],200);
+			}, function($e) {
+				return \Response::json([
+					'error' => [
+						'message' => 'Erro interno. Tente novamente mais tarde.',
+						'internal' => [
+							'message' => $e->getMessage(),
+							'file' => $e->getFile(),
+							'line' => $e->getLine()
+						]
+					]
+				], 500);
 			});
 		}, function($m) {
 			return \Response::json([

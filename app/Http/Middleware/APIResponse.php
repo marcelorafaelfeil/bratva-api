@@ -19,8 +19,7 @@ class APIResponse
 	 * @param  \Closure  $next
 	 * @return mixed
 	 */
-	public function handle($request, Closure $next)
-	{
+	public function handle($request, Closure $next) {
 		// ALLOW OPTIONS METHOD
 		$headers = [
 			'Access-Control-Allow-Origin' => '*',
