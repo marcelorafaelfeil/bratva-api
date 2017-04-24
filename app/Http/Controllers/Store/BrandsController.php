@@ -21,14 +21,14 @@ class BrandsController extends Controller {
 		$m = [];
 
 		if (!isset($r->name) || empty($r->name)) {
-			$m['name'] = ['message' => 'O campo nome é obrigatório.'];
+			$m['name'] = 'O campo nome é obrigatório.';
 		} else {
 			if (strlen($r->name) <= 5) {
-				$m['name'] = ['message' => 'O valor atribuído para o campo nome, é inválido.'];
+				$m['name'] = 'O valor atribuído para o campo nome, é inválido.';
 			}
 		}
 		if (!isset($r->status)) {
-			$m['status'] = ['message' => 'O campo status é obrigatório.'];
+			$m['status'] = 'O campo status é obrigatório.';
 		} else {
 			if (
 				!is_numeric($r->status) ||
@@ -37,14 +37,14 @@ class BrandsController extends Controller {
 					$r->status != Brands::STATUS_FALSE
 				)
 			) {
-				$m['url'] = ['message' => 'O valor atribuíro para o campo status, é inválido.'];
+				$m['url'] = 'O valor atribuíro para o campo status, é inválido.';
 			}
 		}
 		if (!isset($r->url) || empty($r->url)) {
-			$m['url'] = ['message' => 'O campo url é obrigatório'];
+			$m['url'] = 'O campo url é obrigatório';
 		} else {
 			if (FriendlyUrl::has($r->url)) {
-				$m['url'] = ['message' => 'O valor atribuído para o campo url, já está em uso.'];
+				$m['url'] = 'O valor atribuído para o campo url, já está em uso.';
 			}
 		}
 
@@ -60,20 +60,20 @@ class BrandsController extends Controller {
 
 		if (isset($r->id)) {
 			if (!Brands::has($r->id)) {
-				$m['brand'] = ['message' => 'A marca que está tentando editar, não existe.'];
+				$m['brand'] = 'A marca que está tentando editar, não existe.';
 			}
 		}
 
 		if (count($m) == 0) {
 			if (!isset($r->name) || empty($r->name)) {
-				$m['name'] = ['message' => 'O campo nome é obrigatório.'];
+				$m['name'] = 'O campo nome é obrigatório.';
 			} else {
 				if (strlen($r->name) <= 5) {
-					$m['name'] = ['message' => 'O valor atribuído para o campo nome, é inválido.'];
+					$m['name'] = 'O valor atribuído para o campo nome, é inválido.';
 				}
 			}
 			if (!isset($r->status)) {
-				$m['status'] = ['message' => 'O campo status é obrigatório.'];
+				$m['status'] = 'O campo status é obrigatório.';
 			} else {
 				if (
 					!is_numeric($r->status) ||
@@ -82,14 +82,14 @@ class BrandsController extends Controller {
 						$r->status != Brands::STATUS_FALSE
 					)
 				) {
-					$m['url'] = ['message' => 'O valor atribuíro para o campo status, é inválido.'];
+					$m['url'] = 'O valor atribuíro para o campo status, é inválido.';
 				}
 			}
 			if (!isset($r->url) || empty($r->url)) {
-				$m['url'] = ['message' => 'O campo url é obrigatório'];
+				$m['url'] = 'O campo url é obrigatório';
 			} else {
 				if (FriendlyUrl::has($r->url, 'brands', $r->id)) {
-					$m['url'] = ['message' => 'O valor atribuído para o campo url, já está em uso.'];
+					$m['url'] = 'O valor atribuído para o campo url, já está em uso.';
 				}
 			}
 		}
@@ -114,27 +114,27 @@ class BrandsController extends Controller {
 					$r->status != Brands::STATUS_FALSE
 				)
 			) {
-				$m['status'] = ['message' => 'O valor atribuído para o campo status, é inválido.'];
+				$m['status'] = 'O valor atribuído para o campo status, é inválido.';
 			}
 		}
 		if (!empty($r->order_column)) {
 			if (!in_array($r->order_column, $columns)) {
-				$m['columns'] = ['message' => 'O valor atribuído para o campo columns, é inválido.'];
+				$m['columns'] = 'O valor atribuído para o campo columns, é inválido.';
 			}
 		}
 		if (!empty($r->order_by)) {
 			if (!in_array($r->order_by, $orders)) {
-				$m['orders'] = ['message' => 'O valor atribuído para o campo orders, é inválido.'];
+				$m['orders'] = 'O valor atribuído para o campo orders, é inválido.';
 			}
 		}
 		if (!empty($r->page)) {
 			if (!is_numeric($r->page) && $r->page < 0) {
-				$m['page'] = ['message' => 'O valor atribuído para o campo page, é inválido.'];
+				$m['page'] = 'O valor atribuído para o campo page, é inválido.';
 			}
 		}
 		if (!empty($r->limit)) {
 			if (!is_numeric($r->limit) && $r->limit < 0) {
-				$m['limit'] = ['message' => 'O valor atribuído para o campo limit, é inválido.'];
+				$m['limit'] = 'O valor atribuído para o campo limit, é inválido.';
 			}
 		}
 
@@ -155,7 +155,7 @@ class BrandsController extends Controller {
 				}
 			}
 		} else {
-			$m['brands'] = ['message' => 'É necessário selecionar a marca que deseja apagar.'];
+			$m['brands'] = 'É necessário selecionar a marca que deseja apagar.';
 		}
 
 		return $m;
@@ -186,15 +186,15 @@ class BrandsController extends Controller {
 			if (!empty($r->brand_id) || !empty($r->brand_url)) {
 				if (!empty($r->brand_id)) {
 					if (!Brands::has($r->brand_id)) {
-						$m['brand'] = ['message' => 'A marca selecionada não foi encontrada.'];
+						$m['brand'] = 'A marca selecionada não foi encontrada.';
 					}
 				} else if (!empty($r->brand_url)) {
 					if (!Brands::hasUrl($r->brand_url)) {
-						$m['brand'] = ['message' => 'A marca selecionada não foi encontrada.'];
+						$m['brand'] = 'A marca selecionada não foi encontrada.';
 					}
 				}
 			} else {
-				$m['brand'] = ['message' => 'É necessário informar a marca da qual deseja listar os produtos.'];
+				$m['brand'] = 'É necessário informar a marca da qual deseja listar os produtos.';
 			}
 
 			return $m;
@@ -247,7 +247,7 @@ class BrandsController extends Controller {
 	 * @return mixed
 	 */
 	public function newBrand (Request $request) {
-		return $this->validation($request, function ($m) use ($request) {
+		return $this->validation($request, function () use ($request) {
 			return Brands::add($request, function ($data) use ($request) {
 				return \Response::json([
 					'success' => [
@@ -266,12 +266,12 @@ class BrandsController extends Controller {
 					]
 				], 500);
 			});
-		}, function () {
+		}, function ($m) {
 			return \Response::json([
 				'errors' => [
 					'messages' => $m,
 				]
-			]);
+			],400);
 		});
 	}
 
