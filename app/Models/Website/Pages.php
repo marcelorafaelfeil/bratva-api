@@ -2,7 +2,9 @@
 
 namespace App\Models\Website;
 
+use App\Libraries\Utils;
 use App\Models\Generic\FriendlyUrl;
+use App\Models\Generic\Images;
 use Illuminate\Database\Eloquent\Model;
 
 class Pages extends Model {
@@ -39,6 +41,13 @@ class Pages extends Model {
 	}
 
 	/**
+	 * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+	 */
+	public function images() {
+		return $this->belongsToMany('App\Models\Generic\Images', 'pages_has_images', 'pages_id', 'images_id');
+	}
+
+	/**
 	 * @return \Illuminate\Database\Eloquent\Builder
 	 */
 	public function newQuery () {
@@ -55,6 +64,10 @@ class Pages extends Model {
 		return !!(Pages::find($code));
 	}
 
+	/**
+	 * @param $url
+	 * @return bool
+	 */
 	public static function hasByUrl($url) {
 		return (FriendlyUrl::where('url', '=', $url)->count()>0);
 	}
@@ -211,17 +224,26 @@ class Pages extends Model {
 	public static function view ($code, \Closure $success, \Closure $error) {
 		try {
 			$p = Pages::find($code);
+			$p->images = $p->images()->orderBy('featured', 'DESC')->get();
+
+			foreach ($p->images as $i => $img) {
+				$p->images[$i]->base64 = Utils::ConvertBlobToBase64($img, Utils::KeyDir($p->id), 'pages');
+				$p->images[$i]->featured = (int)$p->images[$i]->featured;
+			}
+
 			$data = [
 				'id' => $p->id,
 				'title' => $p->title,
 				'content' => $p->content,
 				'short_description' => $p->short_description,
 				'long_description' => $p->long_description,
-				'status' => $p->status,
+				'status' => (int)$p->status,
 				'expire' => $p->expire,
 				'date_start' => $p->date_start,
-				'date_end' => $p->date_end
+				'date_end' => $p->date_end,
+				'images' => $p->images
 			];
+
 			if($p->url) {
 				$data['url'] = $p->url->url;
 			} else {
@@ -250,6 +272,10 @@ class Pages extends Model {
 		}
 	}
 
+	/**
+	 * @param $s
+	 * @return string
+	 */
 	public static function getStatusText ($s) {
 		switch ($s) {
 			case self::STATUS_TRUE :
@@ -260,6 +286,42 @@ class Pages extends Model {
 				break;
 			default :
 				return 'Indefinido';
+		}
+	}
+
+	/**
+	 * @param $p
+	 * @param $i
+	 * @return mixed
+	 */
+	public static function relationImages ($p, $i) {
+		return Pages::find($p)->images()->attach($i);
+	}
+
+	public static function featuredImage ($r, \Closure $success, \Closure $error) {
+		try {
+			// Muda todas as imagens para featured = 0
+			$p = Pages::find($r->page);
+			$images = $p->images();
+			$images->update(['featured' => 0]);
+			$img = Images::find($r->image);
+			$img->featured = 1;
+			$img->save();
+
+			return $success($img);
+		} catch (\Exception $e) {
+			return $error($e);
+		}
+	}
+
+	public static function hasImage($page, $image) {
+		$p = Pages::find($page);
+		if($p) {
+			$img = $p->images();
+			$img->where('id', '=', $image);
+			return ($img->count() > 0);
+		} else {
+			return 0;
 		}
 	}
 }

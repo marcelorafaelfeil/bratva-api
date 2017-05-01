@@ -345,8 +345,9 @@ class ProductsController extends Controller {
 						]);
 					} else {
 						return \Response::json([
-							'error' => [
-								'message' => 'Produtos não encontrado.'
+							'success' => [
+								'message' => 'Produtos não encontrado.',
+								'data' => []
 							]
 						], 404);
 					}

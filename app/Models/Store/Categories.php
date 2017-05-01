@@ -247,7 +247,7 @@ class Categories extends Model {
 			$data = [
 				'id'=>$cat->id,
 				'name' => $cat->name,
-				'status' => $cat->status
+				'status' => (int)$cat->status
 			];
 			if($cat->url) {
 				$data['url'] = $cat->url->url;
@@ -309,6 +309,7 @@ class Categories extends Model {
 				$d = $c;
 				$d->url;
 				$d->count = $count;
+				$d->status = (int)$d->status;
 				$d->status_text = self::getStatusText($d->status);
 				$d->total_products = $d->products()->count();
 				$d->total_childrens = $d->childrens()->count();

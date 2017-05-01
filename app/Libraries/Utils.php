@@ -51,6 +51,18 @@ class Utils {
 		return $keydir;
 	}
 
+	public static function ConvertBlobToBase64($img, $keydir, $module) {
+		$name = explode('/', $img->src);
+		$name = $name[count($name) - 1];
+		$path = storage_path() . '/'.$module.'/' . $keydir . '/' . $name;
+
+		if (file_exists($path)) {
+			$base64 = base64_encode(file_get_contents($path));
+			return $base64;
+		}
+		return '';
+	}
+
 	/**
 	 * @param $date
 	 * @return bool

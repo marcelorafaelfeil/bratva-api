@@ -2,6 +2,7 @@
 
 namespace App\Models\Store;
 
+use App\Libraries\Utils;
 use App\Models\Generic\FriendlyUrl;
 use App\Models\Generic\Images;
 use Illuminate\Database\Eloquent\Model;
@@ -439,7 +440,7 @@ class Products extends Model {
 					'code' => $p->code,
 					'name' => $p->name,
 					'quantity' => $p->quantity,
-					'status' => $p->status,
+					'status' => (int)$p->status,
 					'status_text' => self::getStatusText($p->status),
 					'short_description' => $p->short_description,
 					'url' => $url,
@@ -468,27 +469,9 @@ class Products extends Model {
 		$p->url;
 		$p->images = $p->images()->orderBy('featured', 'DESC')->get();
 
-		$kd = str_split($p->id);
-		$i = 0;
-		$keydir = '';
-		foreach ($kd as $k) {
-			$i++;
-			$keydir .= $k;
-			if (count($kd) > $i) {
-				$keydir .= '/';
-			}
-		}
 		foreach ($p->images as $i => $img) {
-			$name = explode('/', $img->src);
-			$name = $name[count($name) - 1];
-			$ext = explode('.', $name);
-			$ext = $ext[count($ext) - 1];
-			$path = storage_path() . '/products/' . $keydir . '/' . $name;
-			if (file_exists($path)) {
-				$base64 = base64_encode(file_get_contents($path));
-				//$base64 = 'data:image/'.$ext.';base64,'.$base64;
-				$p->images[$i]->base64 = $base64;
-			}
+			$p->images[$i]->base64 = Utils::ConvertBlobToBase64($img, Utils::KeyDir($p->id), 'products');
+			$p->images[$i]->featured = (int)$p->images[$i]->featured;
 		}
 
 
@@ -513,13 +496,15 @@ class Products extends Model {
 			$p->price = $price;
 		} else {
 			$p->prices = $p->prices()->get();
-
 			$categories = [];
 			foreach ($p->categories()->get() as $c) {
 				array_push($categories, $c->id);
 			}
 			$p->categories = $categories;
 		}
+		$p->status = (int)$p->status;
+		$p->featured = (int)$p->featured;
+		$p->quantity = (int)$p->quantity;
 
 		return $p;
 	}
@@ -619,6 +604,11 @@ class Products extends Model {
 		}
 	}
 
+	/**
+	 * @param $product
+	 * @param $image
+	 * @return bool|int
+	 */
 	public static function hasImage($product, $image) {
 		$p = Products::find($product);
 		if($p) {

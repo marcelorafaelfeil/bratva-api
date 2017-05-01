@@ -14,9 +14,11 @@ use Illuminate\Http\Request;
 */
 Route::group(['prefix' => 'store'], function() {
 	// Products
-	Route::post('products', 'Store\ProductsController@newProduct');
-	Route::put('products', 'Store\ProductsController@updateProduct');
-	Route::delete('products', 'Store\ProductsController@removeProducts');
+	Route::group(['prefix' => 'products', 'middleware' => 'jwt'], function() {
+		Route::post('', 'Store\ProductsController@newProduct');
+		Route::put('', 'Store\ProductsController@updateProduct');
+		Route::delete('', 'Store\ProductsController@removeProducts');
+	});
 	Route::get('products', 'Store\ProductsController@listProducts');
 	Route::get('product/{url}/view', 'Store\ProductsController@viewProduct');
 	Route::get('product/{id}/viewById', 'Store\ProductsController@viewProductById');
@@ -74,6 +76,7 @@ Route::group(['prefix' => 'web'], function() {
 	Route::get('pages/{code}/viewbycode', 'Website\PagesController@viewPageById');
 	Route::get('pages/{url}/view', 'Website\PagesController@viewPageByUrl');
 	Route::get('pages/{code}/viewById', 'Website\PagesController@viewPageById');
+	Route::put('pages/featuredImage', 'Website\PagesController@featuredImage');
 
 	// Menus
 	Route::post('menu', 'Website\MenuController@newMenu');
@@ -94,6 +97,12 @@ Route::group(['prefix' => 'web'], function() {
 	/*Route::put('newsletter', 'Website\NewsletterController@updateNewsletter');*/
 	Route::delete('newsletter', 'Website\NewsletterController@removeNewsletters');
 	Route::get('newsletter', 'Website\NewsletterController@listNewsletters');
+});
+
+Route::group(['prefix' => 'auth'], function() {
+	Route::post('', 'Auth\AuthController@Authentication');
+	Route::post('users', 'Auth\RegisterController@add');
+	Route::put('users', 'Auth\RegisterController@edit');
 });
 
 Route::group(['prefix' => 'upload'], function() {

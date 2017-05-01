@@ -246,6 +246,27 @@ class PagesController extends Controller {
 		return $m;
 	}
 
+	private function validationFeaturedImage($d) {
+		$m = [];
+
+		if(!isset($d->page) || empty($d->page)) {
+			$m['page'] = ['message' => 'Não foi possível identificar a página.'];
+		} else {
+			if(!Pages::has($d->page)) {
+				$m['page'] = ['message' => 'A página informada não foi encontrada.'];
+			}
+		}
+		if(!isset($d->image) || empty($d->image)) {
+			$m['image'] = ['message' => 'É necessário selecionar a imagem que deseja marcar como principal.'];
+		} else {
+			if(!Pages::hasImage($d->page, $d->image)) {
+				$m['image'] = ['message' => 'A imagem selecionada não foi encontrada neste produto.'];
+			}
+		}
+
+		return $m;
+	}
+
 	/**
 	 * @param $r
 	 * @param \Closure $success
@@ -275,6 +296,9 @@ class PagesController extends Controller {
 				break;
 			case 'viewPageById':
 				$m = self::validationViewById($r);
+				break;
+			case 'featuredImage':
+				$m = self::validationFeaturedImage($r);
 				break;
 		}
 
@@ -486,6 +510,40 @@ class PagesController extends Controller {
 					'messages' => $m
 				]
 			]);
+		});
+	}
+
+	/**
+	 * @param Request $r
+	 * @return mixed
+	 */
+	public function featuredImage (Request $r) {
+		return $this->validation($r, function() use ($r) {
+			return Pages::featuredImage($r, function($data) {
+				return \Response::json([
+					'success' => [
+						'message' => 'Imagem alterada com sucesso.',
+						'data' => $data
+					]
+				],200);
+			}, function($e) {
+				return \Response::json([
+					'error' => [
+						'message' => 'Erro interno. Tente novamente mais tarde.',
+						'internal' => [
+							'message' => $e->getMessage(),
+							'file' => $e->getFile(),
+							'line' => $e->getLine()
+						]
+					]
+				], 500);
+			});
+		}, function($m) {
+			return \Response::json([
+				'errors' => [
+					'messages' => $m
+				]
+			], 400);
 		});
 	}
 }

@@ -214,7 +214,7 @@ class Brands extends Model
 					'description' => $b->description,
 					'url' => $url,
 					'thumb' => $thumb,
-					'status' => $b->status,
+					'status' => (int)$b->status,
 					'status_text' => self::getStatusText($b->status),
 					'total_products' => $b->products()->count()
 				];
@@ -263,7 +263,7 @@ class Brands extends Model
 				'id' => $b->id,
 				'name' => $b->name,
 				'description' => $b->description,
-				'status' => $b->status
+				'status' => (int)$b->status
 			];
 
 			if($b->url) {

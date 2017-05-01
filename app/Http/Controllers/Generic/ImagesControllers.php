@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Generic;
 use App\Models\Store\Products;
 use App\Models\Store\Brands;
 use App\Models\Website\Banners;
+use App\Models\Website\Pages;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Libraries\Utils;
@@ -22,6 +23,7 @@ class ImagesControllers extends UploadsController
 	private $PATHS = [
 		'products' => '/products/',
 		'brands' => '/brands/',
+		'pages' => '/pages/',
 		'banners' => '/banners/'
 	];
 
@@ -43,6 +45,9 @@ class ImagesControllers extends UploadsController
 				break;
 			case 'banners':
 				$has = Banners::has($this->key);
+				break;
+			case 'pages':
+				$has = Pages::has($this->key);
 				break;
 		}
 		return $has;

@@ -67,6 +67,9 @@ class Images extends Model
 			case 'banners':
 				Website\Banners::relationImages($k, $i);
 				break;
+			case 'pages':
+				Website\Pages::relationImages($k, $i);
+				break;
 		}
 	}
 
