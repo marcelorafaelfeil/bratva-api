@@ -206,7 +206,7 @@ class BannersTypes extends Model {
 		try {
 			$bt = BannersTypes::where('id', '=', $r->type);
 
-			return $success($bt->get());
+			return $success($bt->first());
 		} catch (Exception $e) {
 			return $error($e);
 		}

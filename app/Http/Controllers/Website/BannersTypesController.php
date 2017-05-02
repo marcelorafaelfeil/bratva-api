@@ -106,7 +106,7 @@ class BannersTypesController extends Controller {
 					$m['title'] = 'O valor atribuído para o campo title, já existe.';
 				}
 			}
-			if (!isset($r->status) || $r->status == "") {
+			if (!isset($r->status) || $r->status === "") {
 				$m['status'] = 'O campo status é obrigatório.';
 			} else {
 				if (
@@ -119,7 +119,7 @@ class BannersTypesController extends Controller {
 					$m['status'] = 'O valor atribuído para o campo status, é inválido.';
 				}
 			}
-			if (!isset($r->expire) || $r->expire == "") {
+			if (!isset($r->expire) || $r->expire === "") {
 				$m['expire'] = 'O campo expirar, é obrigatório';
 			} else {
 				if (
