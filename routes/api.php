@@ -60,6 +60,7 @@ Route::group(['prefix' => 'web'], function() {
 		Route::delete('types', 'Website\BannersTypesController@removeTypes');
 		Route::get('types', 'Website\BannersTypesController@listTypes');
 		Route::get('types/banners', 'Website\BannersTypesController@listBannersByTypes');
+		Route::get('types/view', 'Website\BannersTypesController@viewBannersTypesById');
 
 		// Banners
 		Route::post('', 'Website\BannersController@newBanner');

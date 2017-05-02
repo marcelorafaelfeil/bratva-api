@@ -137,10 +137,11 @@ class BannersTypes extends Model {
 			$orderColumn = isset($r->orderColumn) ? $r->orderColumn : 'order';
 			$limit = isset($r->limit) ? $r->limit : null;
 			$page = isset($r->page) ? $r->page : null;
+			$activeds = isset($r->activeds) ? $r->activeds : false;
 
 			$Types = BannersTypes::query();
 
-			if ($r->activeds) {
+			if ($activeds) {
 				$Types->where([
 					['status', '=', $status],
 					['expire', '=', 1],
@@ -163,12 +164,26 @@ class BannersTypes extends Model {
 				}
 			}
 
-			return $success($Types->get());
+			$data = [];
+
+			foreach($Types->get() as $k => $t) {
+				$data[$k] = $t;
+				$data[$k]->status_text = self::getStatusText($t->status);
+				$data[$k]->total_banners = $t->banners()->count();
+			}
+
+			return $success($data);
 		} catch (\Exception $e) {
 			return $error($e);
 		}
 	}
 
+	/**
+	 * @param $r
+	 * @param \Closure $success
+	 * @param \Closure $error
+	 * @return mixed
+	 */
 	public static function listBanners ($r, \Closure $success, \Closure $error) {
 		try {
 			$Types = BannersTypes::find($r->type);
@@ -181,6 +196,28 @@ class BannersTypes extends Model {
 		}
 	}
 
+	/**
+	 * @param $r
+	 * @param \Closure $success
+	 * @param \Closure $error
+	 * @return mixed
+	 */
+	public static function viewById($r, \Closure $success, \Closure $error) {
+		try {
+			$bt = BannersTypes::where('id', '=', $r->type);
+
+			return $success($bt->get());
+		} catch (Exception $e) {
+			return $error($e);
+		}
+	}
+
+	/**
+	 * @param $r
+	 * @param \Closure $success
+	 * @param \Closure $error
+	 * @return mixed
+	 */
 	public static function listBannersByManyTypes ($r, \Closure $success, \Closure $error) {
 		try {
 			$types = BannersTypes::query();
@@ -202,6 +239,11 @@ class BannersTypes extends Model {
 		}
 	}
 
+	/**
+	 * @param $data1
+	 * @param $data2
+	 * @return array
+	 */
 	protected static function mergeBanners($data1, $data2) {
 		$data=[];
 		if(count($data1) > 0 && count($data2) > 0) {
@@ -222,5 +264,22 @@ class BannersTypes extends Model {
 		}
 
 		return $data;
+	}
+
+	/**
+	 * @param $s
+	 * @return string
+	 */
+	public static function getStatusText ($s) {
+		switch ($s) {
+			case self::STATUS_TRUE :
+				return 'Ativado';
+				break;
+			case self::STATUS_FALSE :
+				return 'Desativado';
+				break;
+			default :
+				return 'Indefinido';
+		}
 	}
 }

@@ -32,10 +32,16 @@ class Categories extends Model {
 		return $this->belongsToMany('App\Models\Store\Products', 'products_has_categories', 'categories_id', 'products_id');
 	}
 
+	/**
+	 * @return \Illuminate\Database\Eloquent\Relations\HasOne
+	 */
 	public function getFather () {
 		return $this->hasOne('App\Models\Store\Categories', 'id', 'father');
 	}
 
+	/**
+	 * @return \Illuminate\Database\Eloquent\Relations\HasOne
+	 */
 	public function childrens() {
 		return $this->hasOne('App\Models\Store\Categories', 'father', 'id');
 	}
@@ -225,6 +231,10 @@ class Categories extends Model {
 		}
 	}
 
+	/**
+	 * @param $c
+	 * @return int
+	 */
 	public static function countHierarchy ($c) {
 		$count = 0;
 		if (isset($c) && count($c) > 0) {
@@ -239,6 +249,12 @@ class Categories extends Model {
 		return $count;
 	}
 
+	/**
+	 * @param $r
+	 * @param \Closure $success
+	 * @param \Closure $error
+	 * @return mixed
+	 */
 	public static function view($r, \Closure $success, \Closure $error) {
 		try {
 
@@ -362,6 +378,10 @@ class Categories extends Model {
 		}
 	}
 
+	/**
+	 * @param $s
+	 * @return string
+	 */
 	public static function getStatusText ($s) {
 		switch ($s) {
 			case self::STATUS_TRUE :

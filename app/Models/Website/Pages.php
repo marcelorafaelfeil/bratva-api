@@ -203,7 +203,7 @@ class Pages extends Model {
 				}
 			}
 
-			$Pages->select(['id', 'title', 'short_description', 'status', 'long_description', 'created_at']);
+			$Pages->select(['id', 'title', 'short_description', 'status', 'long_description', 'created_at', 'lock']);
 			$data = $Pages->get();
 			foreach($data as $k => $d) {
 				$data[$k]->status_text = self::getStatusText($d->status);
@@ -298,6 +298,12 @@ class Pages extends Model {
 		return Pages::find($p)->images()->attach($i);
 	}
 
+	/**
+	 * @param $r
+	 * @param \Closure $success
+	 * @param \Closure $error
+	 * @return mixed
+	 */
 	public static function featuredImage ($r, \Closure $success, \Closure $error) {
 		try {
 			// Muda todas as imagens para featured = 0
@@ -314,6 +320,11 @@ class Pages extends Model {
 		}
 	}
 
+	/**
+	 * @param $page
+	 * @param $image
+	 * @return bool|int
+	 */
 	public static function hasImage($page, $image) {
 		$p = Pages::find($page);
 		if($p) {

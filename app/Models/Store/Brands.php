@@ -225,6 +225,12 @@ class Brands extends Model
 		}
 	}
 
+	/**
+	 * @param $r
+	 * @param \Closure $success
+	 * @param \Closure $error
+	 * @return mixed
+	 */
 	public static function listProducts($r, \Closure $success, \Closure $error) {
 		try {
 			if($r->brand_id)
@@ -242,6 +248,10 @@ class Brands extends Model
 		}
 	}
 
+	/**
+	 * @param $s
+	 * @return string
+	 */
 	public static function getStatusText ($s) {
 		switch ($s) {
 			case self::STATUS_TRUE :
@@ -255,6 +265,12 @@ class Brands extends Model
 		}
 	}
 
+	/**
+	 * @param $r
+	 * @param \Closure $success
+	 * @param \Closure $error
+	 * @return mixed
+	 */
 	public static function view($r, \Closure $success, \Closure $error) {
 		try {
 			$b = Brands::find($r->brand);
