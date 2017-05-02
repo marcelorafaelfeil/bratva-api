@@ -168,6 +168,7 @@ class BannersTypes extends Model {
 
 			foreach($Types->get() as $k => $t) {
 				$data[$k] = $t;
+				$data[$k]->status = (int)$t->status;
 				$data[$k]->status_text = self::getStatusText($t->status);
 				$data[$k]->total_banners = $t->banners()->count();
 			}
@@ -206,7 +207,10 @@ class BannersTypes extends Model {
 		try {
 			$bt = BannersTypes::where('id', '=', $r->type);
 
-			return $success($bt->first());
+			$data = $bt->first();
+			$data->status = (int)$data->status;
+			$data->expire = (int)$data->expire;
+			return $success($data);
 		} catch (Exception $e) {
 			return $error($e);
 		}

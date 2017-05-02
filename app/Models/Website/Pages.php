@@ -206,6 +206,8 @@ class Pages extends Model {
 			$Pages->select(['id', 'title', 'short_description', 'status', 'long_description', 'created_at', 'lock']);
 			$data = $Pages->get();
 			foreach($data as $k => $d) {
+				$data[$k]->lock= (int)$d->lock;
+				$data[$k]->status = (int)$d->status;
 				$data[$k]->status_text = self::getStatusText($d->status);
 			}
 
