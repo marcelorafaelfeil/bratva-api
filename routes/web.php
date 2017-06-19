@@ -11,23 +11,4 @@
 |
 */
 
-Route::get('images/{class}/{key}/{filename}', function ($class, $key, $filename) {
-	$kd = str_split($key);
-	$keydir="";
-	$i=0;
-	foreach($kd as $k) {
-		$i++;
-		$keydir.=$k;
-		if(count($kd) > $i) {
-			$keydir.='/';
-		}
-	}
-	$path = storage_path() . '/' . $class. '/'. $keydir . '/' . $filename;
-
-	if(file_exists($path)) {
-		return Image::make($path)->response();
-	} else {
-		$path = storage_path() . '/uploads/noimg.jpg';
-		return Image::make($path)->response();
-	}
-});
+Route::get('images/{class}/{key}/{filename}', 'Generic\ImagesControllers@showImage');

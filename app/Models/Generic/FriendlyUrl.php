@@ -6,6 +6,7 @@ use App\Models\Store\Categories;
 use App\Models\Store\Products;
 use App\Models\Store\Brands;
 use App\Models\Website\Pages;
+use App\Models\Website\PagesCategories;
 use Illuminate\Database\Eloquent\Model;
 
 class FriendlyUrl extends Model
@@ -45,6 +46,13 @@ class FriendlyUrl extends Model
 		return $this->hasOne('App\Models\Website\Pages');
 	}
 
+	/**
+	 * @return \Illuminate\Database\Eloquent\Relations\HasOne
+	 */
+	public function pagesCategories() {
+		return $this->hasOne('App\Models\Website\PagesCategories');
+	}
+
 
 	/**
 	 * @param $u
@@ -73,6 +81,10 @@ class FriendlyUrl extends Model
 				case 'pages' :
 					$p = Pages::find($key);
 					$where[] = ['id', '!=', $p->friendly_url_id];
+					break;
+				case 'pages_categories' :
+					$pc = PagesCategories::find($key);
+					$where[] = ['id', '!=', $pc->friendly_url_id];
 					break;
 			}
 		}

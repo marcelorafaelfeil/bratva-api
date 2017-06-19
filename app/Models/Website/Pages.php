@@ -48,6 +48,13 @@ class Pages extends Model {
 	}
 
 	/**
+	 * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+	 */
+	public function categories() {
+		return $this->belongsToMany('App\Models\Website\PagesCategories', 'pages_has_pages_categories', 'pages_id', 'pages_categories_id');
+	}
+
+	/**
 	 * @return \Illuminate\Database\Eloquent\Builder
 	 */
 	public function newQuery () {
@@ -125,6 +132,14 @@ class Pages extends Model {
 
 			$p->save();
 
+			if(count($r->categories) > 0) {
+				foreach ($r->categories as $c) {
+					$p->categories()->attach($c);
+				}
+			}
+
+			Pages::relationWithPagesCategories($p->id, $r->categories);
+
 			return $success($p);
 		} catch (\Exception $e) {
 			return $error($e);
@@ -150,6 +165,85 @@ class Pages extends Model {
 	}
 
 	/**
+	 * @param $Pages
+	 * @param $r
+	 * @return mixed
+	 */
+	public static function getListPages ($Pages, $r) {
+		$orderBy = isset($r->orderBy) ? $r->orderBy : 'ASC';
+		$orderColumn = isset($r->orderColumn) ? $r->orderColumn : 'id';
+		$limit = isset($r->limit) ? $r->limit : null;
+		$page = isset($r->page) ? $r->page : null;
+		$status = isset($r->status) ? $r->status : null;
+
+		if ($r->activeds) {
+			if(isset($r->status)) {
+				$Pages->where([
+					['status', '=', $status],
+					['expire', '=', 1],
+					['date_start', '<=', date('Y-m-d H:i:s')],
+					['date_end', '>=', date('Y-m-d H:i:s')]
+				]);
+				$Pages->orWhere([
+					['status', '=', $status],
+					['expire', '=', 0],
+				]);
+			} else {
+				$Pages->where([
+					['expire', '=', 1],
+					['date_start', '<=', date('Y-m-d H:i:s')],
+					['date_end', '>=', date('Y-m-d H:i:s')]
+				]);
+				$Pages->orWhere([
+					['expire', '=', 0]
+				]);
+			}
+		} else {
+			if(isset($r->status)) {
+				$Pages->where('status', '=', $status);
+			}
+		}
+
+		$Pages->orderBy($orderColumn, $orderBy);
+
+		if ($limit) {
+			$Pages->take($limit);
+			if ($page) {
+				$page = $limit * $page;
+				$Pages->skip($page);
+			}
+		}
+
+		$Pages->select(['id', 'title', 'short_description', 'status', 'long_description', 'created_at', 'friendly_url_id', 'lock']);
+		$data = $Pages->get();
+		foreach($data as $k => $d) {
+			$data[$k]->url;
+			$data[$k]->lock= (int)$d->lock;
+			$data[$k]->status = (int)$d->status;
+			$data[$k]->status_text = self::getStatusText($d->status);
+		}
+		return $data;
+	}
+
+	/**
+	 * @param $r
+	 * @param \Closure $success
+	 * @param \Closure $error
+	 * @return mixed
+	 */
+	public static function search($r, \Closure $success, \Closure $error) {
+		try {
+			$Pages = Pages::query();
+			$Pages->where('title', 'LIKE', '%'.$r->q.'%');
+			$data = self::getListPages($Pages, $r);
+
+			return $success($data);
+		} catch (\Exception $e) {
+			return $error($e);
+		}
+	}
+
+	/**
 	 * @param $r
 	 * @param \Closure $success
 	 * @param \Closure $error
@@ -157,59 +251,9 @@ class Pages extends Model {
 	 */
 	public static function lists ($r, \Closure $success, \Closure $error) {
 		try {
-			$orderBy = isset($r->orderBy) ? $r->orderBy : 'ASC';
-			$orderColumn = isset($r->orderColumn) ? $r->orderColumn : 'id';
-			$limit = isset($r->limit) ? $r->limit : null;
-			$page = isset($r->page) ? $r->page : null;
-			$status = isset($r->status) ? $r->status : null;
 
 			$Pages = Pages::query();
-
-			if ($r->activeds) {
-				if(isset($r->status)) {
-					$Pages->where([
-						['status', '=', $status],
-						['expire', '=', 1],
-						['date_start', '<=', date('Y-m-d H:i:s')],
-						['date_end', '>=', date('Y-m-d H:i:s')]
-					]);
-					$Pages->orWhere([
-						['status', '=', $status],
-						['expire', '=', 0],
-					]);
-				} else {
-					$Pages->where([
-						['expire', '=', 1],
-						['date_start', '<=', date('Y-m-d H:i:s')],
-						['date_end', '>=', date('Y-m-d H:i:s')]
-					]);
-					$Pages->orWhere([
-						['expire', '=', 0]
-					]);
-				}
-			} else {
-				if(isset($r->status)) {
-					$Pages->where('status', '=', $status);
-				}
-			}
-
-			$Pages->orderBy($orderColumn, $orderBy);
-
-			if ($limit) {
-				$Pages->take($limit);
-				if ($page) {
-					$page = $limit * $page;
-					$Pages->skip($page);
-				}
-			}
-
-			$Pages->select(['id', 'title', 'short_description', 'status', 'long_description', 'created_at', 'lock']);
-			$data = $Pages->get();
-			foreach($data as $k => $d) {
-				$data[$k]->lock= (int)$d->lock;
-				$data[$k]->status = (int)$d->status;
-				$data[$k]->status_text = self::getStatusText($d->status);
-			}
+			$data = self::getListPages($Pages, $r);
 
 			return $success($data);
 		} catch (\Exception $e) {
@@ -233,6 +277,12 @@ class Pages extends Model {
 				$p->images[$i]->featured = (int)$p->images[$i]->featured;
 			}
 
+			$categories = [];
+			foreach($p->categories()->get() as $c) {
+				array_push($categories, $c->id);
+			}
+			$p->categories = $categories;
+
 			$data = [
 				'id' => $p->id,
 				'title' => $p->title,
@@ -243,7 +293,8 @@ class Pages extends Model {
 				'expire' => $p->expire,
 				'date_start' => $p->date_start,
 				'date_end' => $p->date_end,
-				'images' => $p->images
+				'images' => $p->images,
+				'categories' => $categories
 			];
 
 			if($p->url) {
@@ -268,6 +319,11 @@ class Pages extends Model {
 			$u = FriendlyUrl::where('url', '=', $url)->first();
 			$p = $u->pages()->first();
 			$p->url;
+			$categories = [];
+			foreach($p->categories()->get() as $c) {
+				array_push($categories, $c->id);
+			}
+			$p->categories = $categories;
 			return $success($p);
 		} catch (\Exception $e) {
 			return $error($e);
@@ -335,6 +391,25 @@ class Pages extends Model {
 			return ($img->count() > 0);
 		} else {
 			return 0;
+		}
+	}
+
+	/**
+	 * @param $page
+	 * @param $categories
+	 * @throws \Exception
+	 */
+	public static function relationWithPagesCategories ($page, $categories) {
+		try {
+			$Page = Pages::find($page);
+			$Page->categories()->detach();
+			if(count($categories) > 0) {
+				foreach ($categories as $c) {
+					$Page->categories()->attach($c);
+				}
+			}
+		} catch (\Exception $e) {
+			throw new \Exception($e->getMessage(), 500, $e);
 		}
 	}
 }

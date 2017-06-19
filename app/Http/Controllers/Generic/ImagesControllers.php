@@ -7,9 +7,9 @@ use App\Models\Store\Brands;
 use App\Models\Website\Banners;
 use App\Models\Website\Pages;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use App\Libraries\Utils;
 use App\Models\Generic\Images;
+use Intervention\Image\Facades\Image;
 
 class ImagesControllers extends UploadsController
 {
@@ -124,12 +124,14 @@ class ImagesControllers extends UploadsController
 
 							if(isset($request->idImage[$k]) && !empty($request->idImage[$k])) {
 								$img = Images::find($request->idImage[$k]);
-								$img->src = env('APP_IMAGES_URL') . $this->PATHS[$section] . $key . '/' . $name;
+								// $img->src = env('APP_IMAGES_URL') . $this->PATHS[$section] . $key . '/' . $name;
+								$img->src = $this->PATHS[$section] . $key . '/' . $name;
 								$img->legend = isset($request->legend[$k]) ? $request->legend[$k] : '';
 								$img->save();
 							} else {
 								$img = Images::create([
-									'src' => env('APP_IMAGES_URL') . $this->PATHS[$section] . $key . '/' . $name,
+									// 'src' => env('APP_IMAGES_URL') . $this->PATHS[$section] . $key . '/' . $name,
+									'src' => $this->PATHS[$section] . $key . '/' . $name,
 									'legend' => isset($request->legend[$k]) ? $request->legend[$k] : '',
 									'featured' => isset($request->featured[$k]) ? $request->featured[$k] : Images::FEATURED_FALSE
 								]);
@@ -213,5 +215,43 @@ class ImagesControllers extends UploadsController
 				]
 			], 500);
 		}
+	}
+
+	/**
+	 * @param $class
+	 * @param $key
+	 * @param $filename
+	 * @param Request $request
+	 * @return mixed
+	 */
+	public function showImage ($class, $key, $filename, Request $request) {
+		$kd = str_split($key);
+		$keydir="";
+		$i=0;
+		foreach($kd as $k) {
+			$i++;
+			$keydir.=$k;
+			if(count($kd) > $i) {
+				$keydir.='/';
+			}
+		}
+		$path = storage_path() . '/' . $class. '/'. $keydir . '/' . $filename;
+
+
+
+		if(file_exists($path)) {
+			$image = Image::make($path);
+		} else {
+			$path = storage_path() . '/uploads/noimg.jpg';
+			$image = Image::make($path);
+		}
+		if(isset($request->widen)) $image->widen($request->widen);
+		if(isset($request->heighten))$image->heighten($request->heighten);
+		if(isset($request->resizeCanvas)) {
+			$r = explode('x',$request->resizeCanvas);
+			$image->resizeCanvas($r[0], $r[1]);
+		}
+
+		return $image->response();
 	}
 }

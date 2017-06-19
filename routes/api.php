@@ -47,6 +47,7 @@ Route::group(['prefix' => 'store'], function() {
 Route::group(['prefix' => 'bratva'], function() {
 	// CheckCode
 	Route::post('checkcode/import', 'Bratva\CheckCodeController@importCodes');
+	Route::post('checkcode/commit', 'Bratva\CheckCodeController@commitCodes');
 	Route::post('checkcode', 'Bratva\CheckCodeController@newCode');
 	Route::delete('checkcode', 'Bratva\CheckCodeController@removeCodes');
 });
@@ -69,15 +70,26 @@ Route::group(['prefix' => 'web'], function() {
 		Route::get('', 'Website\BannersController@listBanners');
 	});
 
-	// Pages
-	Route::post('pages', 'Website\PagesController@newPage');
-	Route::put('pages', 'Website\PagesController@updatePage');
-	Route::delete('pages', 'Website\PagesController@removePages');
-	Route::get('pages', 'Website\PagesController@listPages');
-	Route::get('pages/{code}/viewbycode', 'Website\PagesController@viewPageById');
-	Route::get('pages/{url}/view', 'Website\PagesController@viewPageByUrl');
-	Route::get('pages/{code}/viewById', 'Website\PagesController@viewPageById');
-	Route::put('pages/featuredImage', 'Website\PagesController@featuredImage');
+	Route::group(['prefix' => 'pages'], function() {
+
+		// Pages
+		Route::post('', 'Website\PagesController@newPage');
+		Route::put('', 'Website\PagesController@updatePage');
+		Route::delete('', 'Website\PagesController@removePages');
+		Route::get('', 'Website\PagesController@listPages');
+		Route::get('{code}/viewbycode', 'Website\PagesController@viewPageById');
+		Route::get('{url}/view', 'Website\PagesController@viewPageByUrl');
+		Route::get('{code}/viewById', 'Website\PagesController@viewPageById');
+		Route::put('featuredImage', 'Website\PagesController@featuredImage');
+
+
+		Route::post('categories', 'Website\PagesCategoriesController@newCategory');
+		Route::put('categories', 'Website\PagesCategoriesController@updateCategory');
+		Route::delete('categories', 'Website\PagesCategoriesController@removeCategories');
+		Route::get('categories', 'Website\PagesCategoriesController@listCategories');
+		Route::get('categories/{id}/view', 'Website\PagesCategoriesController@viewCategory');
+		Route::get('categories/pages', 'Website\PagesCategoriesController@listPagesOfPagesCategories');
+	});
 
 	// Menus
 	Route::post('menu', 'Website\MenuController@newMenu');
@@ -98,6 +110,10 @@ Route::group(['prefix' => 'web'], function() {
 	/*Route::put('newsletter', 'Website\NewsletterController@updateNewsletter');*/
 	Route::delete('newsletter', 'Website\NewsletterController@removeNewsletters');
 	Route::get('newsletter', 'Website\NewsletterController@listNewsletters');
+
+	Route::post('contact', 'Website\ContactController@sendContact');
+
+	Route::get('search', 'Website\SearchController@searchAll');
 });
 
 Route::group(['prefix' => 'auth'], function() {

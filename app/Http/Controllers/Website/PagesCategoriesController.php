@@ -1,45 +1,48 @@
 <?php
 
-namespace App\Http\Controllers\Store;
+namespace App\Http\Controllers\Website;
 
-use App\Http\Controllers\Controller;
 use App\Models\Generic\FriendlyUrl;
-use App\Models\Store\Categories;
+use App\Models\Website\PagesCategories;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 
-class CategoriesController extends Controller {
-
+/**
+ * Class PagesCategoriesController
+ * @package App\Http\Controllers\Website
+ */
+class PagesCategoriesController extends Controller {
 	/**
 	 * @param $r
 	 * @return array
 	 */
-	protected function validateNewCategory ($r) {
+	private function validateNewPagesCategory ($r) {
 		$m = [];
-		if(empty($r->name)) {
+		if (empty($r->name)) {
 			$m['name'] = 'O campo nome é obrigatório.';
 		}
-		if(!empty($r->father)) {
-			if(!Categories::has($r->father)) {
+		if (!empty($r->father)) {
+			if (!PagesCategories::has($r->father)) {
 				$m['father'] = 'A categoria pai é inválida.';
 			}
 		}
-		if(!isset($r->status) || $r->status === '') {
+		if (!isset($r->status) || $r->status === '') {
 			$m['status'] = 'O campo status é obrigatório.';
 		} else {
-			if(
+			if (
 				!is_numeric($r->status) ||
 				(
-					$r->status != Categories::STATUS_FALSE &&
-					$r->status != Categories::STATUS_TRUE
+					$r->status != PagesCategories::STATUS_FALSE &&
+					$r->status != PagesCategories::STATUS_TRUE
 				)
 			) {
 				$m['status'] = 'O valor atribuído para o campo status, é inválido.';
 			}
 		}
-		if(empty($r->url)) {
+		if (empty($r->url)) {
 			$m['url'] = 'O campo url é obrigatório.';
 		} else {
-			if(FriendlyUrl::has($r->url)) {
+			if (FriendlyUrl::has($r->url)) {
 				$m['url'] = 'O valor atribuído para o campo URL, já está em uso.';
 			}
 		}
@@ -47,13 +50,17 @@ class CategoriesController extends Controller {
 		return $m;
 	}
 
-	private function validateViewCategory($r) {
+	/**
+	 * @param $r
+	 * @return array
+	 */
+	private function validateViewPagesCategory ($r) {
 		$m = [];
 
-		if(empty($r->category) && empty($r->category_url)) {
+		if(empty($r->category)) {
 			$m['category'] = 'É necessário selecionar a categoria.';
 		} else {
-			if(!Categories::has($r->category) && !Categories::hasUrl($r->category_url)) {
+			if(!PagesCategories::has($r->category)) {
 				$m['category'] = 'A categoria selecionada não foi encontrada.';
 			}
 		}
@@ -65,12 +72,12 @@ class CategoriesController extends Controller {
 	 * @param $r
 	 * @return array
 	 */
-	protected function validateUpdateCategory ($r) {
+	private function validateUpdatePagesCategory($r) {
 		$m = [];
 		if(empty($r->id)) {
 			$m['category'] = 'É necessário selecionar a categoria que deseja editar.';
 		} else {
-			if(!Categories::has($r->id)) {
+			if(!PagesCategories::has($r->id)) {
 				$m['category'] = 'Categoria não encontrada.';
 			}
 		}
@@ -79,7 +86,7 @@ class CategoriesController extends Controller {
 				$m['name'] = 'O campo name é obrigatório.';
 			}
 			if (!empty($r->father)) {
-				if (!Categories::has($r->father)) {
+				if (!PagesCategories::has($r->father)) {
 					$m['father'] = 'A categoria pai é inválida.';
 				}
 			}
@@ -89,8 +96,8 @@ class CategoriesController extends Controller {
 				if (
 					!is_numeric($r->status) ||
 					(
-						$r->status != Categories::STATUS_FALSE &&
-						$r->status != Categories::STATUS_TRUE
+						$r->status != PagesCategories::STATUS_FALSE &&
+						$r->status != PagesCategories::STATUS_TRUE
 					)
 				) {
 					$m['status'] = 'O valor atribuído para o campo status, é inválido.';
@@ -99,7 +106,7 @@ class CategoriesController extends Controller {
 			if (empty($r->url)) {
 				$m['url'] = 'O campo URL é obrigatório.';
 			} else {
-				if (FriendlyUrl::has($r->url, 'categories', $r->id)) {
+				if (FriendlyUrl::has($r->url, 'pages_categories', $r->id)) {
 					$m['url'] = 'O valor atribuído para o campo URL, já está em uso.';
 				}
 			}
@@ -111,13 +118,13 @@ class CategoriesController extends Controller {
 	 * @param $r
 	 * @return array
 	 */
-	protected function validateRemoveCategories ($r) {
+	private function validateRemovePagesCategories($r) {
 		$m = [];
 		if(count($r->categories) == 0) {
 			$m['category'] = 'É necessário selecionar as categorias que deseja remover.';
 		} else {
 			foreach($r->categories as $c) {
-				if(!Categories::has($c)) {
+				if(!PagesCategories::has($c)) {
 					$m['category'] = 'A categoria "' . $c . '", não foi encontrada.';
 				}
 			}
@@ -129,7 +136,7 @@ class CategoriesController extends Controller {
 	 * @param $r
 	 * @return array
 	 */
-	protected function validateListCategories ($r) {
+	private function validateListPagesCategories($r) {
 		$m = [];
 		$columns = ['id', 'name', 'status', 'created_at', 'updated_at'];
 		$orders = ['asc', 'ASC', 'desc', 'DESC'];
@@ -160,17 +167,12 @@ class CategoriesController extends Controller {
 				$m['limit'] = 'O campo limite é obrigatório enquanto o campo page estiver preenchido.';
 			}
 		}
-		if($r->father_url) {
-			if(!Categories::hasUrl($r->father_url)) {
-				$m['father'] = 'Categoria não encontrada.';
-			}
-		}
 		if(isset($r->status) && $r->status != '') {
 			if(
 				!is_numeric($r->status) ||
 				(
-					$r->status != Categories::STATUS_FALSE ||
-					$r->status != Categories::STATUS_TRUE
+					$r->status != PagesCategories::STATUS_FALSE ||
+					$r->status != PagesCategories::STATUS_TRUE
 				)
 			) {
 				$m['status'] = 'O valor atribuído para o campo status, é inválido.';
@@ -180,8 +182,12 @@ class CategoriesController extends Controller {
 		return $m;
 	}
 
-	protected function validationListProductsOfCategories($r) {
-		$pc = new ProductsController();
+	/**
+	 * @param $r
+	 * @return mixed
+	 */
+	private function validationListPagesOfPagesCategories($r) {
+		$pc = new PagesController();
 		return $pc->validation($r, function() use ($r) {
 			$m=[];
 			if(empty($r->category_id) && empty($r->category_url)) {
@@ -199,29 +205,29 @@ class CategoriesController extends Controller {
 	 * @param \Closure $error
 	 * @return mixed
 	 */
-	protected function validation ($r, \Closure $success, \Closure $error) {
+	private function validation ($r, \Closure $success, \Closure $error) {
 		$m = [];
 		$e = new \Exception();
 		$call = $e->getTrace()[1]['function'];
 
 		switch($call) {
 			case 'newCategory' :
-				$m = self::validateNewCategory($r);
+				$m = self::validateNewPagesCategory($r);
 				break;
 			case 'updateCategory' :
-				$m = self::validateUpdateCategory($r);
+				$m = self::validateUpdatePagesCategory($r);
 				break;
 			case 'removeCategories' :
-				$m = self::validateRemoveCategories($r);
+				$m = self::validateRemovePagesCategories($r);
 				break;
 			case 'listCategories' :
-				$m = self::validateListCategories($r);
+				$m = self::validateListPagesCategories($r);
 				break;
 			case 'viewCategory' :
-				$m = self::validateViewCategory($r);
+				$m = self::validateViewPagesCategory($r);
 				break;
-			case 'listProductsOfCategories' :
-				$m = self::validationListProductsOfCategories($r);
+			case 'listPagesOfPagesCategories' :
+				$m = self::validationListPagesOfPagesCategories($r);
 				break;
 		}
 
@@ -238,7 +244,7 @@ class CategoriesController extends Controller {
 	 */
 	public function newCategory (Request $request) {
 		return $this->validation($request, function () use ($request) {
-			return Categories::add($request, function($data) {
+			return PagesCategories::add($request, function($data) {
 				return \Response::json([
 					'success' => [
 						'message' => 'Categoria adicionada com sucesso.',
@@ -270,7 +276,7 @@ class CategoriesController extends Controller {
 	 */
 	public function updateCategory (Request $request) {
 		return $this->validation($request, function() use ($request) {
-			return Categories::edit($request, function($data) {
+			return PagesCategories::edit($request, function($data) {
 				return \Response::json([
 					'success' => [
 						'message' => 'Categoria editada com sucesso.',
@@ -304,7 +310,7 @@ class CategoriesController extends Controller {
 	 */
 	public function removeCategories (Request $request) {
 		return $this->validation($request, function() use ($request) {
-			return Categories::remove($request->categories, function($data) {
+			return PagesCategories::remove($request->categories, function($data) {
 				return \Response::json([
 					'success' => [
 						'message' => 'Categorias apagadas com sucesso.',
@@ -338,7 +344,7 @@ class CategoriesController extends Controller {
 	 */
 	public function listCategories(Request $request) {
 		return $this->validation($request, function() use ($request) {
-			return Categories::lists($request, function($data) {
+			return PagesCategories::lists($request, function($data) {
 				return \Response::json([
 					'success' => [
 						'message' => 'Categorias retornadas com sucesso.',
@@ -366,9 +372,13 @@ class CategoriesController extends Controller {
 		});
 	}
 
-	public function listProductsOfCategories(Request $request) {
+	/**
+	 * @param Request $request
+	 * @return mixed
+	 */
+	public function listPagesOfPagesCategories(Request $request) {
 		return $this->validation($request, function() use ($request) {
-			return Categories::listProducts($request, function($data) {
+			return PagesCategories::listPages($request, function($data) {
 				return \Response::json([
 					'success' => [
 						'message' => 'Dados retornados com sucesso.',
@@ -396,9 +406,14 @@ class CategoriesController extends Controller {
 		});
 	}
 
-	public function viewCategory(Request $r) {
+	/**
+	 * @param Request $r
+	 * @return mixed
+	 */
+	public function viewCategory($id, Request $r) {
+		$r->category = $id;
 		return $this->validation($r, function() use ($r) {
-			return Categories::view($r, function($data) {
+			return PagesCategories::view($r, function($data) {
 				return \Response::json([
 					'success' => [
 						'message' => 'Categoria retornada com sucesso.',

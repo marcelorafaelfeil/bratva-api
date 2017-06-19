@@ -12,7 +12,8 @@ class Codes extends Model {
 	public $incrementing = false;
     protected $table = 'codes';
     protected $fillable = [
-    	'code',
+	    'code',
+	    'checked',
 	    'safe_delete'
     ];
     protected $hidden = [

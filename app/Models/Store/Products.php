@@ -6,6 +6,8 @@ use App\Libraries\Utils;
 use App\Models\Generic\FriendlyUrl;
 use App\Models\Generic\Images;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Config;
 
 class Products extends Model {
 	const CREATED_AT = 'created_at';
@@ -320,6 +322,23 @@ class Products extends Model {
 
 	/**
 	 * @param $r
+	 * @param \Closure $success
+	 * @param \Closure $error
+	 * @return mixed
+	 */
+	public static function search($r, \Closure $success, \Closure $error) {
+		try {
+			$Products = Products::query();
+			$Products->where('name', 'LIKE', '%'.$r->q.'%');
+			$data = self::getListProducts($Products, $r);
+			return $success($data);
+		} catch (\Exception $e) {
+			return $error($e);
+		}
+	}
+
+	/**
+	 * @param $r
 	 * @param \Closure $f
 	 * @param \Closure $error
 	 * @return mixed
@@ -428,8 +447,9 @@ class Products extends Model {
 				$images = $p
 					->images()
 					->orderBy('featured', 'DESC');
+
 				if ($images = $images->first())
-					$image = $images->src;
+					$image = env('APP_IMAGES_URL').$images->src;
 				if (isset($p->url->url))
 					$url = $p->url->url;
 				if (isset($p->brand->name))
@@ -472,6 +492,7 @@ class Products extends Model {
 		foreach ($p->images as $i => $img) {
 			$p->images[$i]->base64 = Utils::ConvertBlobToBase64($img, Utils::KeyDir($p->id), 'products');
 			$p->images[$i]->featured = (int)$p->images[$i]->featured;
+			$p->images[$i]->src = env('APP_IMAGES_URL').$p->images[$i]->src;
 		}
 
 
@@ -502,6 +523,7 @@ class Products extends Model {
 			}
 			$p->categories = $categories;
 		}
+
 		$p->status = (int)$p->status;
 		$p->featured = (int)$p->featured;
 		$p->quantity = (int)$p->quantity;

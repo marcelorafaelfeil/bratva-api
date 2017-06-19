@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Website;
 use App\Libraries\Utils;
 use App\Models\Generic\FriendlyUrl;
 use App\Models\Website\Pages;
+use App\Models\Website\PagesCategories;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
@@ -141,22 +142,35 @@ class PagesController extends Controller {
 		if(empty($r->id)) {
 			$m['page'] = 'É necessário selecionar a página que deseja apagar.';
 		} else {
-			if (empty($r->title)) {
-				$m['title'] = 'O campo título é obrigatório.';
-			}
-			if ($messages = self::validateFriendlyUrl($r, $r->id)) {
-				foreach ($messages as $k => $v) {
-					$m[$k] = $v;
+			if (!Pages::has($r->id)) {
+				$m['page'] = 'A página selecionada não foi encontrada.';
+			} else {
+				if (empty($r->title)) {
+					$m['title'] = 'O campo título é obrigatório.';
 				}
-			}
-			if ($messages = self::simpleValidation($r)) {
-				foreach ($messages as $k => $v) {
-					$m[$k] = $v;
+				if (isset($r->categories)) {
+					$cats = $r->categories;
+					foreach($cats as $c) {
+						if(!PagesCategories::has($c)) {
+							$m['categories'] = 'A categoria "'.$c.'" não existe.';
+							break;
+						}
+					}
 				}
-			}
-			if ($messages = self::validateDates($r)) {
-				foreach ($messages as $k => $v) {
-					$m[$k] = $v;
+				if ($messages = self::validateFriendlyUrl($r, $r->id)) {
+					foreach ($messages as $k => $v) {
+						$m[$k] = $v;
+					}
+				}
+				if ($messages = self::simpleValidation($r)) {
+					foreach ($messages as $k => $v) {
+						$m[$k] = $v;
+					}
+				}
+				if ($messages = self::validateDates($r)) {
+					foreach ($messages as $k => $v) {
+						$m[$k] = $v;
+					}
 				}
 			}
 		}

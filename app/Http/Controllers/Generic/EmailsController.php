@@ -19,18 +19,18 @@ class EmailsController extends Controller {
 		$columns = ['id', 'email'];
 
 		if(isset($r->orderBy) && !in_array($r->orderBy, $orders)) {
-			$m['order'] = ['message' => 'O valor atribuído para o campo orderBy, é inválido.'];
+			$m['order'] = 'O valor atribuído para o campo orderBy, é inválido.';
 		}
 
 		if(isset($r->orderColumn) && !in_array($r->orderColumn, $columns)) {
-			$m['column'] = ['message' => 'O valor atribuído para o campo orderColumn, é inválido.'];
+			$m['column'] = 'O valor atribuído para o campo orderColumn, é inválido.';
 		}
 
 		if(isset($r->limit) && !is_numeric($r->limit)) {
-			$m['limit'] = ['message' => 'O valor atribuído para o campo limite, é inválido.'];
+			$m['limit'] = 'O valor atribuído para o campo limite, é inválido.';
 		}
 		if(isset($r->page) && !is_numeric($r->page)) {
-			$m['page'] = ['message' => 'O valor atribuído para o campo página, é inválido.'];
+			$m['page'] = 'O valor atribuído para o campo página, é inválido.';
 		}
 
 		if(isset($r->verified) && $r->verified != "") {
@@ -41,7 +41,7 @@ class EmailsController extends Controller {
 					$r->verified != Emails::VERIFIED_FALSE
 				)
 			) {
-				$m['verified'] = ['message' => 'O valor atribuído ao campo verificado, é inválido.'];
+				$m['verified'] = 'O valor atribuído ao campo verificado, é inválido.';
 			}
 		}
 
@@ -56,10 +56,10 @@ class EmailsController extends Controller {
 		$m = [];
 
 		if(empty($r->email)) {
-			$m['email'] = ['message' => 'O campo e-mail é obrigatório.'];
+			$m['email'] = 'O campo e-mail é obrigatório.';
 		} else {
 			if(Emails::has($r->email)) {
-				$m['email'] = ['message' => 'O e-mail informado já existe.'];
+				$m['email'] = 'O e-mail informado já existe.';
 			}
 		}
 
@@ -74,10 +74,10 @@ class EmailsController extends Controller {
 		$m = [];
 
 		if(!isset($r->email) || empty($r->email)) {
-			$m['email'] = ['message' => 'O campo e-mail é obrigatório.'];
+			$m['email'] = 'O campo e-mail é obrigatório.';
 		} else {
 			if(Emails::has($r->email, $r->id)) {
-				$m['email'] = ['message' => 'O e-mail informado já existe.'];
+				$m['email'] = 'O e-mail informado já existe.';
 			}
 		}
 
@@ -89,7 +89,7 @@ class EmailsController extends Controller {
 					$r->verified != Emails::VERIFIED_FALSE
 				)
 			) {
-				$m['verified'] = ['message' => 'O valor atribuído ao campo verificado, é inválido.'];
+				$m['verified'] = 'O valor atribuído ao campo verificado, é inválido.';
 			}
 		}
 
@@ -103,11 +103,11 @@ class EmailsController extends Controller {
 	private function validateRemoveEmails($r) {
 		$m = [];
 		if(!isset($r->emails) || count($r->emails) == 0) {
-			$m['emails'] = ['message' => 'É necessário selecionar os e-mails que deseja apagar.'];
+			$m['emails'] = 'É necessário selecionar os e-mails que deseja apagar.';
 		} else {
 			foreach($r->emails as $e) {
 				if(!Emails::has($e)) {
-					$m['emails'] = ['message' => 'O e-mail "'.$e.'" não existe.'];
+					$m['emails'] = 'O e-mail "'.$e.'" não existe.';
 				}
 			}
 		}
